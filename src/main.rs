@@ -11,8 +11,8 @@ struct Message{
 
 impl Message{
     fn print_full_message(&self){
-        println!("{}", self.m_message);
         println!("{}", self.room_origin);
+        println!("{}", self.room_id);
         println!("{}", self.sender_id);
         println!("{}", self.sender_name);
         println!("{}", self.m_message);
@@ -24,6 +24,14 @@ fn clean_room_origin(raw_room_origin:String) -> String {
 }
 
 fn clean_room_id(raw_room_id:String) -> String {
+    return String::from("plop")
+}
+
+fn clean_sender_id(raw_sender_id:String) -> String {
+    return String::from("plop2")
+}
+
+fn clean_sender_name(raw_sender_name:String) -> String {
     return String::from("plop")
 }
 
@@ -41,7 +49,7 @@ fn main() {
                     trigger.make_ascii_lowercase();
                     if trigger.contains("botbot") {
                         // construction du Message
-                        let incoming_message = Message{room_origin: clean_room_origin(String::from(raw_data[0])), room_id: clean_room_origin(String::from(raw_data[0])), sender_id: String::from("empty"), sender_name: String::from("empty"), m_message: String::from(raw_data[3])};
+                        let incoming_message = Message{room_origin: clean_room_origin(String::from(raw_data[0])), room_id: clean_room_origin(String::from(raw_data[0])), sender_id: clean_sender_id(String::from(raw_data[1])), sender_name: clean_sender_name(String::from(raw_data[1])), m_message: String::from(raw_data[3])};
                         incoming_message.print_full_message();
                     }
                 }
