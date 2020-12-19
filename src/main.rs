@@ -20,19 +20,19 @@ impl Message{
 }
 
 fn clean_room_origin(raw_room_origin:String) -> String {
-    return String::from("plop")
+    return String::from("plop1")
 }
 
 fn clean_room_id(raw_room_id:String) -> String {
-    return String::from("plop")
-}
-
-fn clean_sender_id(raw_sender_id:String) -> String {
     return String::from("plop2")
 }
 
+fn clean_sender_id(raw_sender_id:String) -> String {
+    return String::from("plop3")
+}
+
 fn clean_sender_name(raw_sender_name:String) -> String {
-    return String::from("plop")
+    return String::from("plop4")
 }
 
 fn main() {
