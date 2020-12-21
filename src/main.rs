@@ -1,4 +1,5 @@
 use std::io;
+use std::process::Command;
 
 struct Message{
     // structure d'un message reçu
@@ -17,28 +18,37 @@ impl Message{
         println!("{}", self.sender_name);
         println!("{}", self.m_message);
     }
+    fn thinking(&self){
+        println!("Hello {} You just say: {}", self.sender_name, self.m_message);
+    }
 }
 
 fn clean_room_origin(raw_room_origin:String) -> String {
-    let room_index  = raw_room_origin.find("room");
-    println!("{:?}", room_index);
-    let clean_room_origin = String::from("clean room origin test");
-    return clean_room_origin;
+    let debut = raw_room_origin.find("room").unwrap() + 5;
+    let fin = raw_room_origin.find("[").unwrap() - 1;
+    let clean_room_origin = &raw_room_origin[debut..fin];
+    return clean_room_origin.to_string();
 }
 
 fn clean_room_id(raw_room_id:String) -> String {
-    let clean_room_id = String::from("clean room id test");
-    return clean_room_id;
+    let debut = raw_room_id.find("[").unwrap() + 1;
+    let fin = raw_room_id.find("]").unwrap();
+    let clean_room_id = &raw_room_id[debut..fin];
+    return clean_room_id.to_string();
 }
 
 fn clean_sender_id(raw_sender_id:String) -> String {
-    let clean_sender_id = String::from("clean sender id test");
-    return clean_sender_id;
+    let debut = raw_sender_id.find("[").unwrap() + 1;
+    let fin = raw_sender_id.find("]").unwrap();
+    let clean_sender_id = &raw_sender_id[debut..fin];
+    return clean_sender_id.to_string();
 }
 
 fn clean_sender_name(raw_sender_name:String) -> String {
-    let clean_sender_name = String::from("clean sender name test");
-    return clean_sender_name;
+    let debut = raw_sender_name.find("sender").unwrap() + 7;
+    let fin = raw_sender_name.find("[").unwrap() - 1;
+    let clean_sender_name = &raw_sender_name[debut..fin];
+    return clean_sender_name.to_string();
 }
 
 fn main() {
@@ -56,7 +66,8 @@ fn main() {
                     if trigger.contains("botbot") {
                         // construction du Message
                         let incoming_message = Message{room_origin: clean_room_origin(String::from(raw_data[0])), room_id: clean_room_id(String::from(raw_data[0])), sender_id: clean_sender_id(String::from(raw_data[1])), sender_name: clean_sender_name(String::from(raw_data[1])), m_message: String::from(raw_data[3])};
-                        incoming_message.print_full_message();
+                        //incoming_message.print_full_message();
+                        incoming_message.thinking();
                     }
                 }
             }
