@@ -1,5 +1,6 @@
 use std::io;
-use std::process::Command;
+use std::io::{BufRead, BufReader};
+use std::process::{Command, Stdio};
 
 struct Message{
     // structure d'un message reçu
@@ -19,7 +20,12 @@ impl Message{
         println!("{}", self.m_message);
     }
     fn thinking(&self){
-        println!("Hello {} You just say: {}", self.sender_name, self.m_message);
+        Command::new("/home/vlp/git/matrix-commander/matrix-commander.py")
+            .arg("-c/home/vlp/git/matrix-commander/credentials.json")
+            .arg("-s/home/vlp/git/matrix-commander/store/")
+            .arg("-mYou just talked to me")
+            .spawn()
+            .expect("message failed");
     }
 }
 
@@ -52,28 +58,34 @@ fn clean_sender_name(raw_sender_name:String) -> String {
 }
 
 fn main() {
-    loop {
-        let mut buffer = String::new();
-        match io::stdin().read_line(&mut buffer){
-            Ok(_) => {
-                // check que le message correspond bien à une entrée correcte de matrix-commander: https://github.com/8go/matrix-commander
-                let raw_data: Vec<&str> = buffer.split('|').collect();
-                //println!("{}", buffer);
-                if raw_data.len() == 4 {
-                    // check du mot clef botbot peu importe le case
-                    let mut trigger = String::from(raw_data[3]);
-                    trigger.make_ascii_lowercase();
-                    if trigger.contains("botbot") {
-                        // construction du Message
-                        let incoming_message = Message{room_origin: clean_room_origin(String::from(raw_data[0])), room_id: clean_room_id(String::from(raw_data[0])), sender_id: clean_sender_id(String::from(raw_data[1])), sender_name: clean_sender_name(String::from(raw_data[1])), m_message: String::from(raw_data[3])};
-                        //incoming_message.print_full_message();
-                        incoming_message.thinking();
-                    }
+    let mut matrix_commander_shell = Command::new("/home/vlp/git/matrix-commander/matrix-commander.py")
+        .arg("-c/home/vlp/git/matrix-commander/credentials.json")
+        .arg("-s/home/vlp/git/matrix-commander/store/")
+        .arg("-lforever")
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+         let mut child_out = BufReader::new(matrix_commander_shell.stdout.as_mut().unwrap());
+         let mut line = String::new();
+
+         loop {
+             child_out.read_line(&mut line).unwrap();
+             println!("{}", line);
+             // check que le message correspond bien à une entrée correcte de matrix-commander: https://github.com/8go/matrix-commander
+             let raw_data: Vec<&str> = line.split('|').collect();
+             //println!("{}", buffer);
+             if raw_data.len() == 4 {
+                 // check du mot clef botbot peu importe le case
+                 let mut trigger = String::from(raw_data[3]);
+                 trigger.make_ascii_lowercase();
+                 if trigger.contains("botbot") {
+                     // construction du Message
+                     let incoming_message = Message{room_origin: clean_room_origin(String::from(raw_data[0])), room_id: clean_room_id(String::from(raw_data[0])), sender_id: clean_sender_id(String::from(raw_data[1])), sender_name: clean_sender_name(String::from(raw_data[1])), m_message: String::from(raw_data[3])};
+                     //incoming_message.print_full_message();
+                     incoming_message.thinking();
                 }
             }
-            Err(e) => {
-                println!("ERROR: {}", e)
-            }
         }
-    }
+
 }
