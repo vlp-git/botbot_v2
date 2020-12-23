@@ -74,7 +74,6 @@ fn main() {
              println!("{}", line);
              // check que le message correspond bien à une entrée correcte de matrix-commander: https://github.com/8go/matrix-commander
              let raw_data: Vec<&str> = line.split('|').collect();
-             //println!("{}", buffer);
              if raw_data.len() == 4 {
                  // check du mot clef botbot peu importe le case
                  let mut trigger = String::from(raw_data[3]);
