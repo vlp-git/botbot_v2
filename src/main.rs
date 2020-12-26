@@ -1,6 +1,8 @@
-use std::io;
+//;
+//use std::io;
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
+use unidecode::unidecode;
 
 struct Message{
     // structure d'un message reçu
@@ -20,9 +22,11 @@ impl Message{
         println!("{}", self.m_message);
     }
     fn thinking(&self){
-        println!("mhmmmmm...");
-        self.talking("hello bitch !!".to_string());
-
+        let mut choice = String::from(unidecode(&self.m_message).to_string());
+        choice.make_ascii_lowercase();
+        if choice.contains("cafe") {
+            self.talking("Café !!!".to_string());
+        }
     }
     fn talking(&self, answer:String){
         let mut blabla = "-m".to_string();
