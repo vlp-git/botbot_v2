@@ -2,29 +2,16 @@ use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 use unidecode::unidecode;
 use rand::Rng;
-
-
-fn coffee(sender:String) -> String {
-    let random_answer: u32 = rand::thread_rng().gen_range(0..10);
-    let mut blabla = "Et ".to_string();
-    blabla.push_str(&random_answer.to_string());
-    blabla.push_str(" café pour ");
-    blabla.push_str(&sender);
-    blabla.push_str(" !!");
-    return blabla;
-}
-
-fn beer(sender:String) -> String {
-    let mut blabla = "Et une bière pour ".to_string();
-    blabla.push_str(&sender);
-    blabla.push_str(" !!");
-    return blabla;
-}
+// Installer package sqlite3 & libsqlite3-dev
+use rusqlite::{params, Connection, Result};
 
 fn test(sender:String) -> String {
+    let random_answer: u32 = rand::thread_rng().gen_range(1..11);
     let mut blabla = "C'est un super test ".to_string();
     blabla.push_str(&sender);
-    blabla.push_str(" !! botbotv2 with ♥ ");
+    blabla.push_str(" !! botbotv2 with x");
+    blabla.push_str(&random_answer.to_string());
+    blabla.push_str(" ♥ ");
     return blabla;
 }
 
