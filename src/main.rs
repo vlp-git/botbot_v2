@@ -1,8 +1,36 @@
-//;
-//use std::io;
+extern crate rand;
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 use unidecode::unidecode;
+use rand:: Rng;
+
+
+fn coffee(sender:String) -> String {
+    let random_answer: u32 = rand::thread_rng().gen_range(0..10);
+    let mut blabla = "Et ".to_string();
+    blabla.push_str(&random_answer.to_string());
+    blabla.push_str(" café pour ");
+    blabla.push_str(&sender);
+    blabla.push_str(" !!");
+    return blabla;
+}
+
+fn beer(sender:String) -> String {
+    let mut blabla = "Et une bière pour ".to_string();
+    blabla.push_str(&sender);
+    blabla.push_str(" !!");
+    return blabla;
+}
+
+fn test(sender:String) -> String {
+    let mut blabla = "C'est un super test ".to_string();
+    blabla.push_str(&sender);
+    blabla.push_str(" !! botbotv2 with ♥ ");
+    return blabla;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////  Structure et traits
 
 struct Message{
     // structure d'un message reçu
@@ -11,6 +39,7 @@ struct Message{
     sender_id: String,
     sender_name: String,
     m_message: String,
+    m_answer: String,
 }
 
 impl Message{
@@ -20,25 +49,34 @@ impl Message{
         println!("{}", self.sender_id);
         println!("{}", self.sender_name);
         println!("{}", self.m_message);
+        println!("{}", self.m_answer);
     }
-    fn thinking(&self){
+    fn thinking(&self) -> String {
         let mut choice = String::from(unidecode(&self.m_message).to_string());
         choice.make_ascii_lowercase();
-        if choice.contains("cafe") {
-            self.talking("Café !!!".to_string());
+        if choice.contains("test") {
+            return test(self.sender_name.to_string());
+        }else{
+            return "ERROR".to_string()
         }
     }
-    fn talking(&self, answer:String){
+    fn talking(&self){
         let mut blabla = "-m".to_string();
-        blabla.push_str(&answer);
+        blabla.push_str(&self.m_answer);
+        let mut room = "-r".to_string();
+        room.push_str(&self.room_id);
         Command::new("/home/vlp/git/matrix-commander/matrix-commander.py")
             .arg("-c/home/vlp/git/matrix-commander/credentials.json")
             .arg("-s/home/vlp/git/matrix-commander/store/")
+            .arg(room)
             .arg(blabla)
             .spawn()
             .expect("message failed");
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////  FONCTIONS pour nettoyer les trames de matrix-commander
 
 fn clean_room_origin(raw_room_origin:String) -> String {
     let debut = raw_room_origin.find("room").unwrap() + 5;
@@ -68,6 +106,9 @@ fn clean_sender_name(raw_sender_name:String) -> String {
     return clean_sender_name.to_string();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////  FONCTION principale
+
 fn main() {
     //lance matrix-commander en background et pipe son stdout dans le programme
     let mut matrix_commander_shell = Command::new("/home/vlp/git/matrix-commander/matrix-commander.py")
@@ -86,14 +127,16 @@ fn main() {
              // check que le message correspond bien à une entrée correcte de matrix-commander: https://github.com/8go/matrix-commander
              let raw_data: Vec<&str> = line.split('|').collect();
              if raw_data.len() == 4 {
-                 // check du mot clef botbot peu importe le case
+                 // check du mot clef botbot peu importe la casse
                  let mut trigger = String::from(raw_data[3]);
                  trigger.make_ascii_lowercase();
                  if trigger.contains("botbot") {
                      // construction du Message
-                     let incoming_message = Message{room_origin: clean_room_origin(String::from(raw_data[0])), room_id: clean_room_id(String::from(raw_data[0])), sender_id: clean_sender_id(String::from(raw_data[1])), sender_name: clean_sender_name(String::from(raw_data[1])), m_message: String::from(raw_data[3])};
-                     //incoming_message.print_full_message();
-                     incoming_message.thinking();
+                     let mut incoming_message = Message{room_origin: clean_room_origin(String::from(raw_data[0])), room_id: clean_room_id(String::from(raw_data[0])), sender_id: clean_sender_id(String::from(raw_data[1])), sender_name: clean_sender_name(String::from(raw_data[1])), m_message: String::from(raw_data[3]), m_answer: String::from("")};
+                     incoming_message.m_answer = incoming_message.thinking();
+                     if incoming_message.m_answer != "ERROR".to_string() {
+                         incoming_message.talking();
+                     }
                 }
             }
             line.clear();
