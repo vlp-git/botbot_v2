@@ -58,6 +58,7 @@ fn clean_sender_name(raw_sender_name:String) -> String {
 }
 
 fn main() {
+    //lance matrix-commander en background et pipe son stdout dans le programme
     let mut matrix_commander_shell = Command::new("/home/vlp/git/matrix-commander/matrix-commander.py")
         .arg("-c/home/vlp/git/matrix-commander/credentials.json")
         .arg("-s/home/vlp/git/matrix-commander/store/")
@@ -71,7 +72,6 @@ fn main() {
 
          loop {
              child_out.read_line(&mut line).unwrap();
-             println!("{}", line);
              // check que le message correspond bien à une entrée correcte de matrix-commander: https://github.com/8go/matrix-commander
              let raw_data: Vec<&str> = line.split('|').collect();
              if raw_data.len() == 4 {
@@ -85,6 +85,7 @@ fn main() {
                      incoming_message.thinking();
                 }
             }
+            line.clear();
         }
 
 }
