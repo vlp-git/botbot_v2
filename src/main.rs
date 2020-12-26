@@ -1,8 +1,7 @@
-extern crate rand;
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 use unidecode::unidecode;
-use rand:: Rng;
+use rand::Rng;
 
 
 fn coffee(sender:String) -> String {
