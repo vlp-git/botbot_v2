@@ -20,10 +20,17 @@ impl Message{
         println!("{}", self.m_message);
     }
     fn thinking(&self){
+        println!("mhmmmmm...");
+        self.talking("hello bitch !!".to_string());
+
+    }
+    fn talking(&self, answer:String){
+        let mut blabla = "-m".to_string();
+        blabla.push_str(&answer);
         Command::new("/home/vlp/git/matrix-commander/matrix-commander.py")
             .arg("-c/home/vlp/git/matrix-commander/credentials.json")
             .arg("-s/home/vlp/git/matrix-commander/store/")
-            .arg("-mYou just talked to me")
+            .arg(blabla)
             .spawn()
             .expect("message failed");
     }
