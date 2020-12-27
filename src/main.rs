@@ -38,7 +38,7 @@ impl Message{
         println!("{}", self.m_answer);
     }
     fn thinking(&self) -> String {
-        println!("{}", &self.m_message);
+        //println!("{}", &self.m_message);
         let mut choice = String::from(unidecode(&self.m_message).to_string());
         choice.make_ascii_lowercase();
         if choice.contains("test") {
@@ -116,10 +116,11 @@ fn main() {
              // càd: trame de 4 parties séparées par des |
              let raw_data: Vec<&str> = line.split('|').collect();
              if raw_data.len() == 4 {
-                 // check du mot clef botbot peu importe la casse
+                 // check du mot clef botbot peu importe la casse mais vérifie que botbot ne soit pas juste dans le reply
                  let mut trigger = String::from(raw_data[3]);
                  trigger.make_ascii_lowercase();
-                 if trigger.contains("botbot") {
+                 let reply_check = trigger.chars().nth(1).unwrap();
+                 if trigger.contains("botbot") && reply_check !=  '>' {
                      // construction du Message: cf la struct
                      let mut incoming_message = Message{room_origin: clean_room_origin(String::from(raw_data[0])), room_id: clean_room_id(String::from(raw_data[0])), sender_id: clean_sender_id(String::from(raw_data[1])), sender_name: clean_sender_name(String::from(raw_data[1])), m_message: String::from(raw_data[3]), m_answer: String::from("")};
                      incoming_message.m_answer = incoming_message.thinking();
