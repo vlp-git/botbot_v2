@@ -38,7 +38,6 @@ impl Message{
         println!("{}", self.m_answer);
     }
     fn thinking(&self) -> String {
-        //println!("{}", &self.m_message);
         let mut choice = String::from(unidecode(&self.m_message).to_string());
         choice.make_ascii_lowercase();
         if choice.contains("test") {
@@ -110,8 +109,8 @@ fn main() {
          let mut line = String::new();
 
          loop {
-             // lit le buffer
-             child_out.read_line(&mut line).unwrap();
+             // lit le buffer ligne à ligne
+             let len_line = child_out.read_line(&mut line).unwrap();
              // check que la trame dans la 1ère ligne du buffer corresponde bien à une entrée correcte de matrix-commander: https://github.com/8go/matrix-commander
              // càd: trame de 4 parties séparées par des |
              let raw_data: Vec<&str> = line.split('|').collect();
