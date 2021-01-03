@@ -134,7 +134,7 @@ fn main() {
 
     conn.execute(
         "
-        CREATE TABLE if not exists talking (chat_id INTEGER PRIMARY KEY, trigger TEXT not null, answer TEXT not null);
+        CREATE TABLE if not exists talking (chat_id INTEGER PRIMARY KEY, trigger TEXT not null UNIQUE, answer TEXT not null);
         ",
     ).unwrap();
     conn.execute(
