@@ -9,4 +9,4 @@ edition = "2018"
 [dependencies]
 unidecode = "0.3.0"
 rand = "0.8.0"
-rusqlite = "0.24.2"
+sqlite = "0.25.3"
