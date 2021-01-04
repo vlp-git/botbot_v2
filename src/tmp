@@ -19,7 +19,7 @@ conn.execute(
         true
     })
     .unwrap();
-    
+
 conn
 .iterate("SELECT trigger FROM talking ", |pairs| {
     for &(column, value) in pairs.iter() {
@@ -34,3 +34,16 @@ conn.execute(
     INSERT INTO talking (trigger, answer) VALUES ('hello', 'hello mon zubr');
     ",
 ).unwrap();
+
+
+let mut _insert_statement =
+    match connection_db.execute("INSERT INTO talking (trigger, answer) VALUES ('test3, 'super test3');"){
+        Ok(add_chat) => {
+            println!("plop");
+            add_chat
+        }
+        Err(e) => {
+            println!("Error: {}", e);
+            return "ERROR".to_string()
+            }
+      };
