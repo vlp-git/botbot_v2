@@ -39,15 +39,12 @@ impl Message{
                          .prepare("SELECT answer FROM talking where trigger=?")
                          .unwrap();
 
-                statement.bind(1, "hello"").unwrap();
-                //x is a String
+                statement.bind(1, &x[..]).unwrap();
 
                 while let State::Row = statement.next().unwrap() {
                     let blabla = statement.read::<String>(0).unwrap();
                     return blabla;
                 }
-
-                //////////test
                 break;
             }
         }
