@@ -4,27 +4,8 @@
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 
-use sqlite::Connection;use unidecode::unidecode;
-use rand::Rng;
-
-// Installer package sqlite3 & libsqlite3-dev
-
-fn test(sender:String) -> String {
-    let random_answer: u32 = rand::thread_rng().gen_range(1..11);
-    let mut blabla = "C'est un super test ".to_string();
-    blabla.push_str(&sender);
-    blabla.push_str(" !! botbotv2 with x");
-    blabla.push_str(&random_answer.to_string());
-    blabla.push_str(" ♥ ");
-    return blabla;
-}
-
-fn nye(sender:String) -> String {
-    let mut blabla = "Bonne année ".to_string();
-    blabla.push_str(&sender);
-    blabla.push_str(" !!");
-    return blabla;
-}
+use sqlite::{Connection, State};
+use unidecode::unidecode;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  Structure et traits
@@ -34,7 +15,7 @@ struct Message{
     _room_origin: String,
     room_id: String,
     _sender_id: String,
-    sender_name: String,
+    _sender_name: String,
     m_message: String,
     m_answer: String,
 }
@@ -44,36 +25,33 @@ impl Message{
         println!("{}", self._room_origin);
         println!("{}", self.room_id);
         println!("{}", self._sender_id);
-        println!("de-oliveira-reis.acacio@orange.fr{}", self.sender_name);
+        println!("{}", self._sender_name);
         println!("{}", self.m_message);
         println!("{}", self.m_answer);
     }
-    fn thinking(&self, word_list: &Vec<&str>, connection_db: &Connection) -> String {
+    fn thinking(&self, word_list: &Vec<String>, connection_db: &Connection) -> String {
         let mut choice = String::from(unidecode(&self.m_message).to_string());
         choice.make_ascii_lowercase();
         for x in word_list {
             if choice.contains(x) {
                 ///////////////test
-                connection_db
-                .iterate("SELECT answer FROM talking where trigger='hello' ", |pairs| {
-                    for &(column, value) in pairs.iter() {
-                    println!("{} = {}", column, value.unwrap());
-                    }
-                    true
-                })
-                .unwrap();
+                let mut statement = connection_db
+                         .prepare("SELECT answer FROM talking where trigger=?")
+                         .unwrap();
+
+                statement.bind(1, "hello"").unwrap();
+                //x is a String
+
+                while let State::Row = statement.next().unwrap() {
+                    let blabla = statement.read::<String>(0).unwrap();
+                    return blabla;
+                }
+
                 //////////test
                 break;
             }
         }
-
-        if choice.contains("test") {
-            return test(self.sender_name.to_string());
-        } else if choice.contains("bonne annee") {
-                return nye(self.sender_name.to_string());
-        } else {
-            return "ERROR".to_string()
-        }
+        return "ERROR".to_string()
     }
     fn talking(&self){
         let mut blabla = "-m".to_string();
@@ -126,23 +104,29 @@ fn clean_sender_name(raw_sender_name:String) -> String {
 
 fn main() {
 
-    let trigger_word_list = vec!["test", "bonne annee"];
+    let mut trigger_word_list: Vec<String> = Vec::new();
 
-////////// test
+    let conn =
+           match Connection::open("worterkasten.db") {
+               Ok(db) => {
+                        println!("Worterkasten.db open !");
+                        db
+               }
+               Err(e) => {
+                   println!("Error opening worterkasten.db: {}", e);
+                   return;
+               }
+         };
 
-    let conn = Connection::open("worterkasten.db").unwrap();
+    let mut statement = conn
+             .prepare("SELECT trigger FROM talking")
+             .unwrap();
 
-    conn.execute(
-        "
-        CREATE TABLE if not exists talking (chat_id INTEGER PRIMARY KEY, trigger TEXT not null UNIQUE, answer TEXT not null);
-        ",
-    ).unwrap();
-    conn.execute(
-        "
-        INSERT INTO talking (trigger, answer) VALUES ('hello', 'hello mon zubr');
-        ",
-    ).unwrap();
-////////// test
+    while let State::Row = statement.next().unwrap() {
+        let word_to_add = statement.read::<String>(0).unwrap();
+        println!("'{}' will be added as trigger word", word_to_add);
+        trigger_word_list.push(word_to_add);
+    }
 
     //lance matrix-commander en background et pipe son stdout dans le programme
     let mut matrix_commander_shell = Command::new("/home/vlp/git/matrix-commander/matrix-commander.py")
@@ -170,7 +154,7 @@ fn main() {
                  let reply_check = trigger.chars().nth(1).unwrap();
                  if trigger.contains("botbot") && reply_check !=  '>' {
                      // construction du Message: cf la struct
-                     let mut incoming_message = Message{_room_origin: clean_room_origin(String::from(raw_data[0])), room_id: clean_room_id(String::from(raw_data[0])), _sender_id: clean_sender_id(String::from(raw_data[1])), sender_name: clean_sender_name(String::from(raw_data[1])), m_message: String::from(raw_data[3]), m_answer: String::from("")};
+                     let mut incoming_message = Message{_room_origin: clean_room_origin(String::from(raw_data[0])), room_id: clean_room_id(String::from(raw_data[0])), _sender_id: clean_sender_id(String::from(raw_data[1])), _sender_name: clean_sender_name(String::from(raw_data[1])), m_message: String::from(raw_data[3]), m_answer: String::from("")};
                      incoming_message.m_answer = incoming_message.thinking(&trigger_word_list, &conn);
                      if incoming_message.m_answer != "ERROR".to_string() {
                          incoming_message.talking();

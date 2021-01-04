@@ -1,0 +1,36 @@
+let conn = Connection::open("worterkasten.db").unwrap();
+
+conn.execute(
+    "
+    CREATE TABLE if not exists talking (chat_id INTEGER PRIMARY KEY, trigger TEXT not null UNIQUE, answer TEXT not null);
+    ",
+).unwrap();
+
+    match conn.execute("UPDATE foo SET bar = 'baz' WHERE qux = ?", &[&1i32]) {
+        Ok(updated) => println!("{} rows were updated", updated),
+        Err(err) => println!("update failed: {}", err),
+    }
+
+    let _select_result =
+       conn.iterate("SELECT trigger FROM talking", |sql_result| {
+        for &(_column, value) in sql_result.iter() {
+            println!("{:?} {}",trigger_word_list, value.unwrap());
+        }
+        true
+    })
+    .unwrap();
+    
+conn
+.iterate("SELECT trigger FROM talking ", |pairs| {
+    for &(column, value) in pairs.iter() {
+    println!("{} = {}", column, value.unwrap());
+    }
+    true
+})
+.unwrap();
+
+conn.execute(
+    "
+    INSERT INTO talking (trigger, answer) VALUES ('hello', 'hello mon zubr');
+    ",
+).unwrap();
