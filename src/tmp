@@ -1,10 +1,6 @@
 let conn = Connection::open("worterkasten.db").unwrap();
 
-conn.execute(
-    "
-    CREATE TABLE if not exists talking (chat_id INTEGER PRIMARY KEY, trigger TEXT not null UNIQUE, answer TEXT not null);
-    ",
-).unwrap();
+
 
     match conn.execute("UPDATE foo SET bar = 'baz' WHERE qux = ?", &[&1i32]) {
         Ok(updated) => println!("{} rows were updated", updated),
@@ -47,3 +43,37 @@ let mut _insert_statement =
             return "ERROR".to_string()
             }
       };
+
+
+
+
+
+      for x in trigger_word_list {
+          if choice.contains(x) {
+              let mut select_statement =
+                  match connection_db.prepare("SELECT answer FROM talking where trigger=?"){
+                      Ok(match_word) => {
+                          match_word
+                      }
+                      Err(e) => {
+                          println!("Error select word: {}", e);
+                          return "ERROR".to_string()
+                          }
+                    };
+              select_statement.bind(1, &x[..]).unwrap();
+              while let State::Row = select_statement.next().unwrap() {
+                  let blabla = select_statement.read::<String>(0).unwrap();
+                  return blabla;
+              }
+              break;
+          }
+      }
+
+
+      fn my_deamon() -> Child {
+          let mut daemon = Command::new("my/other/programm.sh")
+              .stdout(Stdio::piped())
+              .spawn()
+              .unwrap();
+      return daemon
+      }
