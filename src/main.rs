@@ -223,6 +223,9 @@ fn main() {
     // dans la db à chaque fois que botbot doit analyser les phrases.
     let mut trigger_word_list: Vec<String> = Vec::new();
 
+    // _liste des admins ayant accès au mode admin de botbot
+    let _admin_list = ["@vlp:matrix.fdn.fr", "@belette:uc.neviani.fr", "@afriqs:matrix.fdn.fr", "@asmadeus:codewreck.org", "@tom28:matrix.fdn.fr"];
+
     // _connexion à la db ou création de la db si n'existe pas
     let connection_db =
         match Connection::open("worterkasten.db") {
@@ -270,29 +273,31 @@ fn main() {
             }
         };
 
-    // _création du buffer {matrix_commander_stdout_buffer} et de son stockage ligne à ligne pour analyse
+    // _création du buffer {matrix_commander_stdout_buffer} et de son stockage ligne à ligne {line_from_buffer} pour analyse
     let mut matrix_commander_stdout_buffer = BufReader::new(matrix_commander.stdout.as_mut().unwrap());
     let mut line_from_buffer = String::new();
 
     // _boucle global qui est bloquante à cause de read.line qui attend un '\n' pour avancer
     loop {
-        // _vérifie que le 'processus' de matrix-commander existe toujours en mémoire sinon arréter le program
+        // _vérifie que le 'processus' de matrix-commander existe toujours en mémoire sinon arréte le program
         if matrix_pid.statm().unwrap().size == 0 {
             println!("matrix-commander do not respond, the application will shutdown");
             return;
         }
-        // lecture ligne à ligne du buffer
+        // _lecture ligne à ligne du buffer
         matrix_commander_stdout_buffer.read_line(&mut line_from_buffer).unwrap();
-        // check que la trame dans la 1ère ligne du buffer corresponde bien à une entrée correcte de matrix-commander: https://github.com/8go/matrix-commander
-        // càd: trame de 4 parties séparées par des |
+        // _check que la trame dans la 1ère ligne du buffer corresponde bien à une entrée correcte de matrix-commander: https://github.com/8go/matrix-commander
+        // _càd: trame de 4 parties séparées par des |
         let raw_data: Vec<&str> = line_from_buffer.split('|').collect();
         if raw_data.len() == 4 {
-            // check du mot clef botbot peu importe la casse mais vérifie que botbot ne soit pas juste dans le reply
+            // _check du mot clef botbot peu importe la casse mais vérifie que botbot ne soit pas juste dans le reply
             let mut trigger = String::from(raw_data[3]);
             trigger.make_ascii_lowercase();
-            let reply_check = trigger.chars().nth(1).unwrap();
+            // _on ignore les reply qui commencent par '>'
+            let reply_check = trigger.chars().nth(1).unwrap_or(' ');
             if trigger.contains("botbot") && reply_check !=  '>' {
-                // construction du Message: cf la struct
+                // _construction du message: cf la struct
+                //===> AJOUTER controle des clean
                 let mut incoming_message = Message{_room_origin: clean_room_origin(String::from(raw_data[0])), room_id: clean_room_id(String::from(raw_data[0])), sender_id: clean_sender_id(String::from(raw_data[1])), _sender_name: clean_sender_name(String::from(raw_data[1])), m_message: String::from(raw_data[3]), m_answer: String::from("")};
                 incoming_message.m_answer = incoming_message.thinking(&mut trigger_word_list, &connection_db);
                 if incoming_message.m_answer != "ERROR".to_string() {
