@@ -1,10 +1,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  botbot v2 by vlp
 
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Error};
 use std::process::{Command, Stdio, Child};
 use sqlite::{Connection, State};
 use unidecode::unidecode;
+use procfs::process::Process;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  Structure et traits des messages reçus
@@ -199,15 +200,17 @@ fn init_db(connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> b
     return true;
 }
 
-fn matrix_commander_daemon_launch() -> Child {
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////  FONCTION lancement du processus matrix_commander
+
+fn matrix_commander_daemon_launch() -> Result<Child, Error> {
     let daemon = Command::new("/home/vlp/git/matrix-commander/matrix-commander.py")
         .arg("-c/home/vlp/git/matrix-commander/credentials.json")
         .arg("-s/home/vlp/git/matrix-commander/store/")
         .arg("-lforever")
         .stdout(Stdio::piped())
-        .spawn()
-        .unwrap();
-return daemon
+        .spawn();
+    return daemon;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -243,32 +246,62 @@ fn main() {
     };
 
     // _créer un processus fils au programme qui lance matrix-commander et qui pipe son flux stdout
-    let mut matrix_commander = matrix_commander_daemon_launch();
+    let mut matrix_commander =
+        match matrix_commander_daemon_launch() {
+            Ok(matrix_commander_process) => {
+                matrix_commander_process
+            }
+            Err(e) => {
+                println!("Fail to lauch matrix-commander: {}", e);
+                return
+            }
+        };
+
+    // _crée une object 'processus" que l'on va pouvoir interroger pour vérifier que matrix-commander est toujours en vie
+    let matrix_pid =
+        match Process::new(matrix_commander.id() as i32) {
+            Ok(pid) => {
+                println!("matrix-commander lauched: {}", pid.pid);
+                pid
+            }
+            Err(e) => {
+                println!("fail to get matrix-commander pid: {}", e);
+                return
+            }
+        };
+
+    // _création du buffer {matrix_commander_stdout_buffer} et de son stockage ligne à ligne pour analyse
     let mut matrix_commander_stdout_buffer = BufReader::new(matrix_commander.stdout.as_mut().unwrap());
+    let mut line_from_buffer = String::new();
 
-    let mut line = String::new();
-
-     loop {
-         // lit le buffer ligne à ligne
-         let _len_line = matrix_commander_stdout_buffer.read_line(&mut line).unwrap();
-         // check que la trame dans la 1ère ligne du buffer corresponde bien à une entrée correcte de matrix-commander: https://github.com/8go/matrix-commander
-         // càd: trame de 4 parties séparées par des |
-         let raw_data: Vec<&str> = line.split('|').collect();
-         if raw_data.len() == 4 {
-             // check du mot clef botbot peu importe la casse mais vérifie que botbot ne soit pas juste dans le reply
-             let mut trigger = String::from(raw_data[3]);
-             trigger.make_ascii_lowercase();
-             let reply_check = trigger.chars().nth(1).unwrap();
-             if trigger.contains("botbot") && reply_check !=  '>' {
-                 // construction du Message: cf la struct
-                 let mut incoming_message = Message{_room_origin: clean_room_origin(String::from(raw_data[0])), room_id: clean_room_id(String::from(raw_data[0])), sender_id: clean_sender_id(String::from(raw_data[1])), _sender_name: clean_sender_name(String::from(raw_data[1])), m_message: String::from(raw_data[3]), m_answer: String::from("")};
-                 incoming_message.m_answer = incoming_message.thinking(&mut trigger_word_list, &connection_db);
-                 if incoming_message.m_answer != "ERROR".to_string() {
-                     incoming_message.talking();
-                 }
+    // _boucle global qui est bloquante à cause de read.line qui attend un '\n' pour avancer
+    loop {
+        // _vérifie que le 'processus' de matrix-commander existe toujours en mémoire sinon arréter le program
+        if matrix_pid.statm().unwrap().size == 0 {
+            println!("matrix-commander do not respond, the application will shutdown");
+            return;
+        }
+        // lecture ligne à ligne du buffer
+        matrix_commander_stdout_buffer.read_line(&mut line_from_buffer).unwrap();
+        // check que la trame dans la 1ère ligne du buffer corresponde bien à une entrée correcte de matrix-commander: https://github.com/8go/matrix-commander
+        // càd: trame de 4 parties séparées par des |
+        let raw_data: Vec<&str> = line_from_buffer.split('|').collect();
+        if raw_data.len() == 4 {
+            // check du mot clef botbot peu importe la casse mais vérifie que botbot ne soit pas juste dans le reply
+            let mut trigger = String::from(raw_data[3]);
+            trigger.make_ascii_lowercase();
+            let reply_check = trigger.chars().nth(1).unwrap();
+            if trigger.contains("botbot") && reply_check !=  '>' {
+                // construction du Message: cf la struct
+                let mut incoming_message = Message{_room_origin: clean_room_origin(String::from(raw_data[0])), room_id: clean_room_id(String::from(raw_data[0])), sender_id: clean_sender_id(String::from(raw_data[1])), _sender_name: clean_sender_name(String::from(raw_data[1])), m_message: String::from(raw_data[3]), m_answer: String::from("")};
+                incoming_message.m_answer = incoming_message.thinking(&mut trigger_word_list, &connection_db);
+                if incoming_message.m_answer != "ERROR".to_string() {
+                    incoming_message.talking();
+                }
             }
         }
-        line.clear();
+        // _vide la zone de lecture du buffer à chaque boucle
+        line_from_buffer.clear();
     }
 
 }
