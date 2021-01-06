@@ -168,11 +168,11 @@ fn init_db(connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> b
     let mut create_table_statement =
         match connection_db.prepare("CREATE TABLE if not exists talking (chat_id INTEGER PRIMARY KEY, trigger TEXT not null UNIQUE, answer TEXT not null);") {
             Ok(create_table) => {
-                println!(" > Talking table prepared");
+                println!(" > Talking table ready");
                 create_table
             }
             Err(e) => {
-                println!(" > Fail to prepare talking table: {}", e);
+                println!(" > Fail to read talking table: {}", e);
                 return false;
                 }
           };
@@ -193,7 +193,7 @@ fn init_db(connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> b
 
     while let State::Row = add_words_statement.next().unwrap() {
             let word_to_add = add_words_statement.read::<String>(0).unwrap();
-            println!("'{}' will be added as trigger word", word_to_add);
+            println!(" > '{}' will be added as trigger word", word_to_add);
             trigger_word_list.push(word_to_add);
         }
 
@@ -218,6 +218,7 @@ fn matrix_commander_daemon_launch() -> Result<Child, Error> {
 
 fn main() {
 
+    println!("///// botbot v2 by lovely fdn team");
     // _initialisation de la liste des mots trigger: qui déclenchent une réponse de botbot
     // _la liste est placée dans un tableau remplis depuis la db pour pas à avoir à faire une requête
     // dans la db à chaque fois que botbot doit analyser les phrases.
@@ -226,27 +227,31 @@ fn main() {
     // _liste des admins ayant accès au mode admin de botbot
     let _admin_list = ["@vlp:matrix.fdn.fr", "@belette:uc.neviani.fr", "@afriqs:matrix.fdn.fr", "@asmadeus:codewreck.org", "@tom28:matrix.fdn.fr"];
 
+    println!("[Database]");
+
     // _connexion à la db ou création de la db si n'existe pas
     let connection_db =
         match Connection::open("worterkasten.db") {
             Ok(db) => {
-                println!("Database opened or created !");
+                println!(" > Database opened");
                 db
             }
             Err(e) => {
-                println!("Error opening database: {}", e);
+                println!("!!! Error opening database: {}", e);
                 return;
             }
          };
 
     // _initialisation de la db
     match init_db(&connection_db, &mut trigger_word_list) {
-        true => println!("Database initialized"),
+        true => println!(" > Database initialized"),
         false => {
-            println!("Database initialization failed !");
+            println!("!!! Database initialization failed !");
             return
         }
     };
+
+    println!("[Matrix Connection]");
 
     // _créer un processus fils au programme qui lance matrix-commander et qui pipe son flux stdout
     let mut matrix_commander =
@@ -255,7 +260,7 @@ fn main() {
                 matrix_commander_process
             }
             Err(e) => {
-                println!("Fail to lauch matrix-commander: {}", e);
+                println!("!!! Fail to lauch matrix-commander: {}", e);
                 return
             }
         };
@@ -264,11 +269,11 @@ fn main() {
     let matrix_pid =
         match Process::new(matrix_commander.id() as i32) {
             Ok(pid) => {
-                println!("matrix-commander lauched: {}", pid.pid);
+                println!(" > matrix-commander lauched: {}", pid.pid);
                 pid
             }
             Err(e) => {
-                println!("fail to get matrix-commander pid: {}", e);
+                println!("!!! fail to get matrix-commander pid: {}", e);
                 return
             }
         };
@@ -276,7 +281,7 @@ fn main() {
     // _création du buffer {matrix_commander_stdout_buffer} et de son stockage ligne à ligne {line_from_buffer} pour analyse
     let mut matrix_commander_stdout_buffer = BufReader::new(matrix_commander.stdout.as_mut().unwrap());
     let mut line_from_buffer = String::new();
-
+    println!("[botbot is running]");
     // _boucle global qui est bloquante à cause de read.line qui attend un '\n' pour avancer
     loop {
         // _vérifie que le 'processus' de matrix-commander existe toujours en mémoire sinon arréte le program
@@ -285,7 +290,15 @@ fn main() {
             return;
         }
         // _lecture ligne à ligne du buffer
-        matrix_commander_stdout_buffer.read_line(&mut line_from_buffer).unwrap();
+        let _buffer_control =
+            match matrix_commander_stdout_buffer.read_line(&mut line_from_buffer) {
+                Ok(ok_readline) => ok_readline,
+                Err(e) => {
+                    println!("Unreadable line: {}", e);
+                    line_from_buffer.clear();
+                    break;
+                }
+            };
         // _check que la trame dans la 1ère ligne du buffer corresponde bien à une entrée correcte de matrix-commander: https://github.com/8go/matrix-commander
         // _càd: trame de 4 parties séparées par des |
         let raw_data: Vec<&str> = line_from_buffer.split('|').collect();
@@ -297,11 +310,18 @@ fn main() {
             let reply_check = trigger.chars().nth(1).unwrap_or(' ');
             if trigger.contains("botbot") && reply_check !=  '>' {
                 // _construction du message: cf la struct
-                //===> AJOUTER controle des clean
-                let mut incoming_message = Message{_room_origin: clean_room_origin(String::from(raw_data[0])), room_id: clean_room_id(String::from(raw_data[0])), sender_id: clean_sender_id(String::from(raw_data[1])), _sender_name: clean_sender_name(String::from(raw_data[1])), m_message: String::from(raw_data[3]), m_answer: String::from("")};
-                incoming_message.m_answer = incoming_message.thinking(&mut trigger_word_list, &connection_db);
-                if incoming_message.m_answer != "ERROR".to_string() {
-                    incoming_message.talking();
+                let clean_room           = clean_room_origin(String::from(raw_data[0]));
+                let clean_room_id        = clean_room_id(String::from(raw_data[0]));
+                let clean_sender_id      = clean_sender_id(String::from(raw_data[1]));
+                let clean_sender_name    = clean_sender_name(String::from(raw_data[1]));
+                let clean_message        = String::from(raw_data[3]);
+                let clean_answer         = String::from("");
+                if clean_room != "ERROR.to_string"  && clean_room_id != "ERROR.to_string" && clean_sender_id != "ERROR.to_string" &&  clean_sender_name != "ERROR.to_string" {
+                    let mut incoming_message = Message{_room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, _sender_name: clean_sender_name, m_message: clean_message, m_answer: clean_answer};
+                        incoming_message.m_answer = incoming_message.thinking(&mut trigger_word_list, &connection_db);
+                        if incoming_message.m_answer != "ERROR".to_string() {
+                            incoming_message.talking();
+                        }
                 }
             }
         }
