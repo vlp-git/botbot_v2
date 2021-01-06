@@ -219,6 +219,7 @@ fn matrix_commander_daemon_launch() -> Result<Child, Error> {
 fn main() {
 
     println!("///// botbot v2 by lovely fdn team");
+
     // _initialisation de la liste des mots trigger: qui déclenchent une réponse de botbot
     // _la liste est placée dans un tableau remplis depuis la db pour pas à avoir à faire une requête
     // dans la db à chaque fois que botbot doit analyser les phrases.
@@ -281,14 +282,18 @@ fn main() {
     // _création du buffer {matrix_commander_stdout_buffer} et de son stockage ligne à ligne {line_from_buffer} pour analyse
     let mut matrix_commander_stdout_buffer = BufReader::new(matrix_commander.stdout.as_mut().unwrap());
     let mut line_from_buffer = String::new();
+
     println!("[botbot is running]");
+
     // _boucle global qui est bloquante à cause de read.line qui attend un '\n' pour avancer
     loop {
+
         // _vérifie que le 'processus' de matrix-commander existe toujours en mémoire sinon arréte le program
         if matrix_pid.statm().unwrap().size == 0 {
             println!("matrix-commander do not respond, the application will shutdown");
             return;
         }
+
         // _lecture ligne à ligne du buffer
         let _buffer_control =
             match matrix_commander_stdout_buffer.read_line(&mut line_from_buffer) {
@@ -299,6 +304,7 @@ fn main() {
                     break;
                 }
             };
+
         // _check que la trame dans la 1ère ligne du buffer corresponde bien à une entrée correcte de matrix-commander: https://github.com/8go/matrix-commander
         // _càd: trame de 4 parties séparées par des |
         let raw_data: Vec<&str> = line_from_buffer.split('|').collect();
@@ -306,9 +312,11 @@ fn main() {
             // _check du mot clef botbot peu importe la casse mais vérifie que botbot ne soit pas juste dans le reply
             let mut trigger = String::from(raw_data[3]);
             trigger.make_ascii_lowercase();
+
             // _on ignore les reply qui commencent par '>'
             let reply_check = trigger.chars().nth(1).unwrap_or(' ');
             if trigger.contains("botbot") && reply_check !=  '>' {
+
                 // _construction du message: cf la struct
                 let clean_room           = clean_room_origin(String::from(raw_data[0]));
                 let clean_room_id        = clean_room_id(String::from(raw_data[0]));
