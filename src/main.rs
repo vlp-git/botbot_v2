@@ -15,7 +15,7 @@ struct Message{
     _room_origin: String,
     room_id: String,
     sender_id: String,
-    _sender_name: String,
+    sender_name: String,
     m_message: String,
     m_answer: String,
 }
@@ -25,7 +25,7 @@ impl Message{
         println!("{}", self._room_origin);
         println!("{}", self.room_id);
         println!("{}", self.sender_id);
-        println!("{}", self._sender_name);
+        println!("{}", self.sender_name);
         println!("{}", self.m_message);
         println!("{}", self.m_answer);
     }
@@ -33,66 +33,16 @@ impl Message{
         let mut choice = String::from(unidecode(&self.m_message).to_string());
         choice.make_ascii_lowercase();
         if choice.contains("admin add") && &self.sender_id == "@vlp:matrix.fdn.fr" {
-            let debut_trigger = choice.find("[").unwrap() + 1;
-            let fin_trigger = choice.find("]").unwrap();
-            let trigger_to_add = &choice[debut_trigger..fin_trigger];
-            let debut_answer = choice.rfind("[").unwrap() + 1;
-            let fin_answer = choice.rfind("]").unwrap();
-            let answer_to_add = &choice[debut_answer..fin_answer];
-            let mut insert_statement =
-                match connection_db.prepare("INSERT INTO talking (trigger, answer) VALUES (?, ?);"){
-                    Ok(add_chat) => {
-                        add_chat
-                    }
-                    Err(e) => {
-                        println!("Error add word: {}", e);
-                        return "ERROR".to_string()
-                        }
-                  };
-                insert_statement.bind(1, trigger_to_add).unwrap();
-                insert_statement.bind(2, answer_to_add).unwrap();
-                insert_statement.next().unwrap();
-                trigger_word_list.push(trigger_to_add.to_string());
+            let check_del = add_chat(get_left_arg(&choice),get_right_arg(&choice), connection_db, trigger_word_list);
+            return "ADMIN".to_string()
         } else if choice.contains("admin del") && &self.sender_id == "@vlp:matrix.fdn.fr"{
-            let debut_trigger = choice.find("[").unwrap() + 1;
-            let fin_trigger = choice.find("]").unwrap();
-            let trigger_to_del = &choice[debut_trigger..fin_trigger];
-            let mut del_statement =
-                match connection_db.prepare("DELETE FROM talking WHERE trigger=?"){
-                    Ok(check_chat) => {
-                        check_chat
-                    }
-                    Err(e) => {
-                        println!("Error: {}", e);
-                        return "ERROR".to_string()
-                        }
-                  };
-            del_statement.bind(1, trigger_to_del).unwrap();
-            del_statement.next().unwrap();
-            trigger_word_list.retain(|x| *x != trigger_to_del);
+            let check_del = del_chat(get_left_arg(&choice), connection_db, trigger_word_list);
+            return "ADMIN".to_string()
         } else{
-            for x in trigger_word_list {
-                if choice.contains(&x[..]) {
-                    let mut select_statement =
-                        match connection_db.prepare("SELECT answer FROM talking where trigger=?"){
-                            Ok(match_word) => {
-                                match_word
-                            }
-                            Err(e) => {
-                                println!("Error select word: {}", e);
-                                return "ERROR".to_string()
-                                }
-                          };
-                    select_statement.bind(1, &x[..]).unwrap();
-                    while let State::Row = select_statement.next().unwrap() {
-                        let blabla = select_statement.read::<String>(0).unwrap();
-                        return blabla;
-                    }
-                    break;
-                }
-            }
+            let answer = return_answer(choice, connection_db, trigger_word_list);
+            let modified_t_answer= &answer[..].replace("%s", &self.sender_name);
+            return modified_t_answer.to_string();
         }
-        return "ERROR".to_string()
     }
     fn talking(&self){
         let mut blabla = "-m".to_string();
@@ -109,6 +59,66 @@ impl Message{
     }
 }
 
+fn add_chat(trigger: String, answer: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> bool{
+    let mut insert_statement =
+        match connection_db.prepare("INSERT INTO talking (trigger, answer) VALUES (?, ?);"){
+            Ok(add_chat) => {
+                add_chat
+            }
+            Err(e) => {
+                println!("Error add word: {}", e);
+                return false;
+                }
+          };
+        insert_statement.bind(1, &trigger[..]).unwrap();
+        insert_statement.bind(2, &answer[..]).unwrap();
+        insert_statement.next().unwrap();
+        trigger_word_list.push(trigger.to_string());
+        println!(" > admin: add '{}'", trigger);
+        return true;
+}
+
+fn del_chat(trigger: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> bool{
+    let mut del_statement =
+        match connection_db.prepare("DELETE FROM talking WHERE trigger=?"){
+            Ok(check_chat) => {
+                check_chat
+            }
+            Err(e) => {
+                println!("Error del word: {}", e);
+                return false;
+                }
+          };
+    del_statement.bind(1, &trigger[..]).unwrap();
+    del_statement.next().unwrap();
+    trigger_word_list.retain(|x| *x != trigger);
+    println!(" > admin: del '{}'", trigger);
+    return true;
+}
+
+fn return_answer(choice: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> String {
+    for x in trigger_word_list {
+        if choice.contains(&x[..]) {
+            let mut select_statement =
+                match connection_db.prepare("SELECT answer FROM talking where trigger=?"){
+                    Ok(match_word) => {
+                        match_word
+                    }
+                    Err(e) => {
+                        println!("Error select word: {}", e);
+                        return "ERROR".to_string();
+                        }
+                  };
+            select_statement.bind(1, &x[..]).unwrap();
+            while let State::Row = select_statement.next().unwrap() {
+                let blabla = select_statement.read::<String>(0).unwrap();
+                return blabla;
+            }
+            break;
+        }
+    }
+    return "ERROR".to_string()
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  FONCTIONS pour nettoyer les trames de matrix-commander
 
@@ -158,6 +168,18 @@ fn clean_sender_name(raw_sender_name:String) -> String {
     else{
         return clean_sender_name.to_string();
     }
+}
+
+fn get_left_arg(admin_msg: &String) -> String {
+    let debut_mark = admin_msg.find("[").unwrap() + 1;
+    let fin_mark = admin_msg.find("]").unwrap();
+    return admin_msg[debut_mark..fin_mark].to_string();
+}
+
+fn get_right_arg(admin_msg: &String) -> String {
+    let debut_mark = admin_msg.rfind("[").unwrap() + 1;
+    let fin_mark = admin_msg.rfind("]").unwrap();
+    return admin_msg[debut_mark..fin_mark].to_string();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -325,9 +347,9 @@ fn main() {
                 let clean_message        = String::from(raw_data[3]);
                 let clean_answer         = String::from("");
                 if clean_room != "ERROR.to_string"  && clean_room_id != "ERROR.to_string" && clean_sender_id != "ERROR.to_string" &&  clean_sender_name != "ERROR.to_string" {
-                    let mut incoming_message = Message{_room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, _sender_name: clean_sender_name, m_message: clean_message, m_answer: clean_answer};
+                    let mut incoming_message = Message{_room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message, m_answer: clean_answer};
                         incoming_message.m_answer = incoming_message.thinking(&mut trigger_word_list, &connection_db);
-                        if incoming_message.m_answer != "ERROR".to_string() {
+                        if incoming_message.m_answer != "ERROR".to_string() && incoming_message.m_answer != "ADMIN".to_string() {
                             incoming_message.talking();
                         }
                 }
