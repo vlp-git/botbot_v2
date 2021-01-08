@@ -476,7 +476,7 @@ fn main() {
 
             // _on ignore les reply qui commencent par '>'
             let reply_check = trigger.chars().nth(1).unwrap_or(' ');
-            if trigger.contains("botbot") && reply_check !=  '>' {
+            if trigger.contains("botbotv2") && reply_check !=  '>' {
 
                 // _construction du message: cf la struct
                 let clean_room           =
