@@ -31,17 +31,29 @@ impl Message{
     }
     fn thinking(&self, trigger_word_list: &mut Vec<String>, connection_db: &Connection) -> String {
         let mut choice = String::from(unidecode(&self.m_message).to_string());
+        ///// to split uppercases
         choice.make_ascii_lowercase();
         if choice.contains("admin add") && &self.sender_id == "@vlp:matrix.fdn.fr" {
-            let check_del = add_chat(get_left_arg(&choice),get_right_arg(&choice), connection_db, trigger_word_list);
-            return "ADMIN".to_string()
+            let check_add = add_chat(get_left_arg(&choice),get_right_arg(&choice), connection_db, trigger_word_list);
+            if check_add != "ERROR" {
+                let admin_add_return = format!("[admin mode by: {}] {} ajouté !", &self.sender_name, check_add);
+                return  admin_add_return;
+            } else {
+                return check_add;
+            }
         } else if choice.contains("admin del") && &self.sender_id == "@vlp:matrix.fdn.fr"{
             let check_del = del_chat(get_left_arg(&choice), connection_db, trigger_word_list);
-            return "ADMIN".to_string()
+            if check_del != "ERROR" {
+                let admin_del_return = format!("[admin mode by: {}] {} supprimé !", &self.sender_name, check_del);
+                return admin_del_return;
+            } else {
+                return check_del;
+            }
         } else{
             let answer = return_answer(choice, connection_db, trigger_word_list);
             let modified_t_answer= &answer[..].replace("%s", &self.sender_name);
-            return modified_t_answer.to_string();
+            let modified_t_answe2r= &modified_t_answer[..].replace("%n", "\n");
+            return modified_t_answe2r.to_string();
         }
     }
     fn talking(&self){
@@ -59,7 +71,7 @@ impl Message{
     }
 }
 
-fn add_chat(trigger: String, answer: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> bool{
+fn add_chat(trigger: String, answer: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> String{
     let mut insert_statement =
         match connection_db.prepare("INSERT INTO talking (trigger, answer) VALUES (?, ?);"){
             Ok(add_chat) => {
@@ -67,18 +79,22 @@ fn add_chat(trigger: String, answer: String, connection_db: &Connection, trigger
             }
             Err(e) => {
                 println!("Error add word: {}", e);
-                return false;
+                return "ERROR".to_string();
                 }
           };
         insert_statement.bind(1, &trigger[..]).unwrap();
         insert_statement.bind(2, &answer[..]).unwrap();
-        insert_statement.next().unwrap();
+        let _run_statement =
+            match insert_statement.next() {
+                Ok(run_ok) => run_ok,
+                Err(_e) => return "ERROR".to_string(),
+            };
         trigger_word_list.push(trigger.to_string());
         println!(" > admin: add '{}'", trigger);
-        return true;
+        return trigger;
 }
 
-fn del_chat(trigger: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> bool{
+fn del_chat(trigger: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> String{
     let mut del_statement =
         match connection_db.prepare("DELETE FROM talking WHERE trigger=?"){
             Ok(check_chat) => {
@@ -86,14 +102,18 @@ fn del_chat(trigger: String, connection_db: &Connection, trigger_word_list: &mut
             }
             Err(e) => {
                 println!("Error del word: {}", e);
-                return false;
+                return "ERROR".to_string();
                 }
           };
     del_statement.bind(1, &trigger[..]).unwrap();
-    del_statement.next().unwrap();
+    let _run_statement =
+        match del_statement.next() {
+            Ok(run_ok) => run_ok,
+            Err(_e) => return "ERROR".to_string(),
+        };
     trigger_word_list.retain(|x| *x != trigger);
     println!(" > admin: del '{}'", trigger);
-    return true;
+    return trigger;
 }
 
 fn return_answer(choice: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> String {
@@ -122,52 +142,102 @@ fn return_answer(choice: String, connection_db: &Connection, trigger_word_list: 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  FONCTIONS pour nettoyer les trames de matrix-commander
 
-fn clean_room_origin(raw_room_origin:String) -> String {
-    let debut = raw_room_origin.find("room").unwrap_or(0) + 5;
-    let fin = raw_room_origin.find("[").unwrap_or(0) - 1;
+fn clean_room_origin(raw_room_origin:String) -> Result<String, String> {
+    let debut = match raw_room_origin.find("room") {
+        Some(debut_index) => {
+             debut_index + 5
+         }
+         None => {
+             0
+         }
+    };
+    let fin = match raw_room_origin.find("[") {
+        Some(fin_index) => {
+             fin_index - 1
+         }
+         None => {
+             0
+         }
+    };
+    if debut == 0 || fin == 0 || debut > fin {
+        return Err("clean_room ERROR: Matrix-Commander output unreadable".to_string());
+    }
     let clean_room_origin = &raw_room_origin[debut..fin];
-    if debut == 0 || fin == 0 {
-        return "ERROR".to_string()
-    }
-    else{
-        return clean_room_origin.to_string();
-    }
+    return Ok(clean_room_origin.to_string())
 }
 
-fn clean_room_id(raw_room_id:String) -> String {
-    let debut = raw_room_id.find("[").unwrap_or(0) + 1;
-    let fin = raw_room_id.find("]").unwrap_or(0);
+fn clean_room_id(raw_room_id:String) -> Result<String, String> {
+    let debut = match raw_room_id.find("[") {
+        Some(debut_index) => {
+             debut_index + 1
+         }
+         None => {
+             0
+         }
+    };
+    let fin = match raw_room_id.find("]") {
+        Some(fin_index) => {
+             fin_index
+         }
+         None => {
+             0
+         }
+    };
+    if debut == 0 || fin == 0 || debut > fin {
+        return Err("clean_room_id ERROR: Matrix-Commander output unreadable".to_string());
+    }
     let clean_room_id = &raw_room_id[debut..fin];
-    if debut == 0 || fin == 0 {
-        return "ERROR".to_string()
-    }
-    else{
-        return clean_room_id.to_string();
-    }
+    return Ok(clean_room_id.to_string())
 }
 
-fn clean_sender_id(raw_sender_id:String) -> String {
-    let debut = raw_sender_id.find("[").unwrap_or(0) + 1;
-    let fin = raw_sender_id.find("]").unwrap_or(0);
+
+fn clean_sender_id(raw_sender_id:String) -> Result<String, String> {
+    let debut = match raw_sender_id.find("[") {
+        Some(debut_index) => {
+             debut_index + 1
+         }
+         None => {
+             0
+         }
+    };
+    let fin = match raw_sender_id.find("]") {
+        Some(fin_index) => {
+             fin_index
+         }
+         None => {
+             0
+         }
+    };
+    if debut == 0 || fin == 0 || debut > fin {
+        return Err("clean_sender_id ERROR: Matrix-Commander output unreadable".to_string());
+    }
     let clean_sender_id = &raw_sender_id[debut..fin];
-    if debut == 0 || fin == 0 {
-        return "ERROR".to_string()
-    }
-    else{
-        return clean_sender_id.to_string();
-    }
+    return Ok(clean_sender_id.to_string())
 }
 
-fn clean_sender_name(raw_sender_name:String) -> String {
-    let debut = raw_sender_name.find("sender").unwrap_or(0) + 7;
-    let fin = raw_sender_name.find("[").unwrap_or(0) - 1;
-    let clean_sender_name = &raw_sender_name[debut..fin];
-    if debut == 0 || fin == 0 {
-        return "ERROR".to_string()
+
+fn clean_sender_name(raw_sender_name:String) -> Result<String, String> {
+    let debut = match raw_sender_name.find("sender") {
+        Some(debut_index) => {
+             debut_index + 7
+         }
+         None => {
+             0
+         }
+    };
+    let fin = match raw_sender_name.find("[") {
+        Some(fin_index) => {
+             fin_index - 1
+         }
+         None => {
+             0
+         }
+    };
+    if debut == 0 || fin == 0 || debut > fin {
+        return Err("clean_sender_name ERROR: Matrix-Commander output unreadable".to_string());
     }
-    else{
-        return clean_sender_name.to_string();
-    }
+    let raw_sender_name = &raw_sender_name[debut..fin];
+    return Ok(raw_sender_name.to_string())
 }
 
 fn get_left_arg(admin_msg: &String) -> String {
@@ -185,17 +255,15 @@ fn get_right_arg(admin_msg: &String) -> String {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  FONCTION initialisation de la db
 
-fn init_db(connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> bool {
+fn init_db(connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<usize, String> {
 
     let mut create_table_statement =
         match connection_db.prepare("CREATE TABLE if not exists talking (chat_id INTEGER PRIMARY KEY, trigger TEXT not null UNIQUE, answer TEXT not null);") {
-            Ok(create_table) => {
-                println!(" > Talking table ready");
-                create_table
+            Ok(create_table_statement_ctrl) => {
+                create_table_statement_ctrl
             }
-            Err(e) => {
-                println!(" > Fail to read talking table: {}", e);
-                return false;
+            Err(_e) => {
+                return Err("Talking table fail to initialized".to_string());
                 }
           };
 
@@ -203,23 +271,20 @@ fn init_db(connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> b
 
     let mut add_words_statement =
         match connection_db.prepare("SELECT trigger FROM talking") {
-            Ok(fill_list) => {
-                println!(" > Wordlist loaded");
-                fill_list
+            Ok(add_words_statement_ctrl) => {
+                add_words_statement_ctrl
             }
-            Err(e) => {
-                println!(" > Fail to load wordlist.db: {}", e);
-                return false;
+            Err(_e) => {
+                return Err("Fail to load wordlist.db".to_string());
                 }
           };
 
     while let State::Row = add_words_statement.next().unwrap() {
             let word_to_add = add_words_statement.read::<String>(0).unwrap();
-            println!(" > '{}' will be added as trigger word", word_to_add);
             trigger_word_list.push(word_to_add);
         }
 
-    return true;
+    return Ok(trigger_word_list.len());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -255,21 +320,25 @@ fn main() {
     // _connexion à la db ou création de la db si n'existe pas
     let connection_db =
         match Connection::open("worterkasten.db") {
-            Ok(db) => {
+            Ok(connection_db_ctrl) => {
                 println!(" > Database opened");
-                db
+                connection_db_ctrl
             }
             Err(e) => {
                 println!("!!! Error opening database: {}", e);
-                return;
+                return
             }
          };
 
     // _initialisation de la db
-    match init_db(&connection_db, &mut trigger_word_list) {
-        true => println!(" > Database initialized"),
-        false => {
-            println!("!!! Database initialization failed !");
+    let _init_db =
+        match init_db(&connection_db, &mut trigger_word_list) {
+            Ok(init_db_ctrl) => {
+                println!(" > Database initialized with {} words", init_db_ctrl);
+                init_db_ctrl
+            }
+            Err(e) => {
+            println!("!!! Database initialization failed: {}", e);
             return
         }
     };
@@ -279,8 +348,8 @@ fn main() {
     // _créer un processus fils au programme qui lance matrix-commander et qui pipe son flux stdout
     let mut matrix_commander =
         match matrix_commander_daemon_launch() {
-            Ok(matrix_commander_process) => {
-                matrix_commander_process
+            Ok(matrix_commander_ctrl) => {
+                matrix_commander_ctrl
             }
             Err(e) => {
                 println!("!!! Fail to lauch matrix-commander: {}", e);
@@ -291,9 +360,9 @@ fn main() {
     // _crée une object 'processus" que l'on va pouvoir interroger pour vérifier que matrix-commander est toujours en vie
     let matrix_pid =
         match Process::new(matrix_commander.id() as i32) {
-            Ok(pid) => {
-                println!(" > matrix-commander lauched: {}", pid.pid);
-                pid
+            Ok(matrix_pid_ctrl) => {
+                println!(" > matrix-commander lauched: {}", matrix_pid_ctrl.pid);
+                matrix_pid_ctrl
             }
             Err(e) => {
                 println!("!!! fail to get matrix-commander pid: {}", e);
@@ -301,8 +370,14 @@ fn main() {
             }
         };
 
-    // _création du buffer {matrix_commander_stdout_buffer} et de son stockage ligne à ligne {line_from_buffer} pour analyse
-    let mut matrix_commander_stdout_buffer = BufReader::new(matrix_commander.stdout.as_mut().unwrap());
+    let matrix_commander_raw_buffer =
+        match matrix_commander.stdout.as_mut(){
+            Some(matrix_commander_raw_buffer) => matrix_commander_raw_buffer,
+            None => return,
+        };
+
+    let mut matrix_commander_ready_buffer = BufReader::new(matrix_commander_raw_buffer);
+
     let mut line_from_buffer = String::new();
 
     println!("[botbot is running]");
@@ -318,8 +393,8 @@ fn main() {
 
         // _lecture ligne à ligne du buffer
         let _buffer_control =
-            match matrix_commander_stdout_buffer.read_line(&mut line_from_buffer) {
-                Ok(ok_readline) => ok_readline,
+            match matrix_commander_ready_buffer.read_line(&mut line_from_buffer) {
+                Ok(_buffer_control_ctrl) => _buffer_control_ctrl,
                 Err(e) => {
                     println!("Unreadable line: {}", e);
                     line_from_buffer.clear();
@@ -340,18 +415,32 @@ fn main() {
             if trigger.contains("botbot") && reply_check !=  '>' {
 
                 // _construction du message: cf la struct
-                let clean_room           = clean_room_origin(String::from(raw_data[0]));
-                let clean_room_id        = clean_room_id(String::from(raw_data[0]));
-                let clean_sender_id      = clean_sender_id(String::from(raw_data[1]));
-                let clean_sender_name    = clean_sender_name(String::from(raw_data[1]));
+                let clean_room           =
+                    match clean_room_origin(String::from(raw_data[0])) {
+                        Ok(clean_room_ok) => clean_room_ok,
+                        Err(_e) => break,
+                    };
+                let clean_room_id           =
+                    match clean_room_id(String::from(raw_data[0])) {
+                        Ok(clean_room_id_ok) => clean_room_id_ok,
+                        Err(_e) => break,
+                    };
+                let clean_sender_id           =
+                    match clean_sender_id(String::from(raw_data[1])) {
+                        Ok(clean_sender_id_ok) => clean_sender_id_ok,
+                        Err(_e) => break,
+                    };
+                let clean_sender_name           =
+                    match clean_sender_name(String::from(raw_data[1])) {
+                        Ok(clean_sender_name_ok) => clean_sender_name_ok,
+                        Err(_e) => break,
+                    };
                 let clean_message        = String::from(raw_data[3]);
-                let clean_answer         = String::from("");
-                if clean_room != "ERROR.to_string"  && clean_room_id != "ERROR.to_string" && clean_sender_id != "ERROR.to_string" &&  clean_sender_name != "ERROR.to_string" {
-                    let mut incoming_message = Message{_room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message, m_answer: clean_answer};
-                        incoming_message.m_answer = incoming_message.thinking(&mut trigger_word_list, &connection_db);
-                        if incoming_message.m_answer != "ERROR".to_string() && incoming_message.m_answer != "ADMIN".to_string() {
-                            incoming_message.talking();
-                        }
+                let clean_answer         = String::new();
+                let mut incoming_message = Message{_room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message, m_answer: clean_answer};
+                incoming_message.m_answer = incoming_message.thinking(&mut trigger_word_list, &connection_db);
+                if incoming_message.m_answer != "ERROR".to_string() {
+                    incoming_message.talking();
                 }
             }
         }
