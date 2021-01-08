@@ -131,6 +131,9 @@ fn add_chat(trigger: String, answer: String, connection_db: &Connection, trigger
 }
 
 fn del_chat(trigger: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<String, String> {
+    if !trigger_word_list.contains(&trigger) {
+        return Err("ERROR".to_string())
+    }
     let mut del_statement =
         match connection_db.prepare("DELETE FROM talking WHERE trigger=?"){
             Ok(del_statement_ctrl) => {
