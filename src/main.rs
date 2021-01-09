@@ -91,9 +91,9 @@ impl Message{
         let mut room = "-r".to_string();
         room.push_str(&self.room_id);
         let _talking_status =
-            match Command::new("/home/vlp/git/matrix-commander/matrix-commander.py")
-            .arg("-c/home/vlp/git/matrix-commander/credentials.json")
-            .arg("-s/home/vlp/git/matrix-commander/store/")
+            match Command::new("./../matrix-commander/matrix-commander.py")
+            .arg("-c./../matrix-commander/credentials.json")
+            .arg("-s./..//matrix-commander/store/")
             .arg(room)
             .arg(blabla)
             .spawn() {
@@ -355,9 +355,9 @@ fn init_db(connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> R
 
 fn matrix_commander_daemon_launch() -> Result<Child, Error> {
     // _initialise le daemon matrix-commander
-    let daemon = Command::new("/home/vlp/git/matrix-commander/matrix-commander.py")
-        .arg("-c/home/vlp/git/matrix-commander/credentials.json")
-        .arg("-s/home/vlp/git/matrix-commander/store/")
+    let daemon = Command::new("./../matrix-commander/matrix-commander.py")
+        .arg("-c./../matrix-commander/credentials.json")
+        .arg("-s./../matrix-commander/store/")
         .arg("-lforever")
         .stdout(Stdio::piped())
         .spawn();
