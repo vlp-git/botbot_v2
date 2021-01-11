@@ -6,6 +6,7 @@ use std::process::{Command, Stdio, Child};
 use sqlite::{Connection, State};
 use unidecode::unidecode;
 use procfs::process::Process;
+use rand::Rng;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  Structure et traits des messages reçus
@@ -116,7 +117,9 @@ fn add_chat(trigger: String, answer: String, connection_db: &Connection, trigger
                 Ok(_run_statement_ctrl) => _run_statement_ctrl,
                 Err(e) => return Err(format!("ERROR: process add trigger - {}", e)),
             };
-        trigger_word_list.push(trigger.to_string());
+        if !trigger_word_list.contains(&trigger.to_string()){
+            trigger_word_list.push(trigger.to_string());
+        }
         Ok(trigger)
 }
 
@@ -140,6 +143,7 @@ fn del_chat(trigger: String, connection_db: &Connection, trigger_word_list: &mut
 }
 
 fn return_answer(choice: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<String, String> {
+    let mut tmp_answers: Vec<String> = Vec::new();
     for x in trigger_word_list {
         if choice.contains(&x[..]) {
             let mut select_statement =
@@ -150,12 +154,17 @@ fn return_answer(choice: String, connection_db: &Connection, trigger_word_list: 
             select_statement.bind(1, &x[..]).unwrap();
             while let State::Row = select_statement.next().unwrap() {
                 let blabla = select_statement.read::<String>(0).unwrap();
-                return Ok(blabla);
+                tmp_answers.push(blabla);
             }
             continue;
         }
     }
-    Err(format!("ERROR: no word found"))
+    if tmp_answers.len() != 0 {
+        let mut rng = rand::thread_rng();
+        Ok(tmp_answers[rng.gen_range(0..tmp_answers.len())].to_string())
+    }else{
+        Err(format!("ERROR: no word found"))
+    }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  FONCTIONS pour nettoyer les trames de matrix-commander
@@ -274,13 +283,9 @@ fn init_db(connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> R
 
     // _crée la table talking si elle n'existe pas
     let mut create_table_statement =
-        match connection_db.prepare("CREATE TABLE if not exists talking (chat_id INTEGER PRIMARY KEY, trigger TEXT not null UNIQUE, answer TEXT not null);") {
-            Ok(create_table_statement_ctrl) => {
-                create_table_statement_ctrl
-            }
-            Err(_e) => {
-                return Err("Talking table fail to initialized".to_string());
-                }
+        match connection_db.prepare("CREATE TABLE if not exists talking (chat_id INTEGER PRIMARY KEY, trigger TEXT not null, answer TEXT not null);") {
+            Ok(create_table_statement_ctrl) => create_table_statement_ctrl,
+            Err(_e) => return Err("Talking table fail to initialized".to_string()),
           };
 
     while let State::Row = create_table_statement.next().unwrap() {}
@@ -288,20 +293,18 @@ fn init_db(connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> R
     // _charge dans trigger_word_list tous les triggers de la table talking
     let mut add_words_statement =
         match connection_db.prepare("SELECT trigger FROM talking") {
-            Ok(add_words_statement_ctrl) => {
-                add_words_statement_ctrl
-            }
-            Err(_e) => {
-                return Err("Fail to load wordlist.db".to_string());
-                }
+            Ok(add_words_statement_ctrl) => add_words_statement_ctrl,
+            Err(_e) => return Err("Fail to load wordlist.db".to_string()),
           };
 
     while let State::Row = add_words_statement.next().unwrap() {
             let word_to_add = add_words_statement.read::<String>(0).unwrap();
-            trigger_word_list.push(word_to_add);
+            if !trigger_word_list.contains(&word_to_add){
+                trigger_word_list.push(word_to_add);
+            }
         }
 
-    return Ok(trigger_word_list.len());
+    Ok(trigger_word_list.len())
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -356,19 +359,17 @@ fn main() {
                 init_db_ctrl
             }
             Err(e) => {
-            println!("!!! Database initialization failed: {}", e);
-            return
-        }
-    };
+                println!("!!! Database initialization failed: {}", e);
+                return
+            }
+        };
 
     println!("[Matrix Connection]");
 
     // _créer un processus fils au programme qui lance matrix-commander et qui pipe son flux stdout
     let mut matrix_commander =
         match matrix_commander_daemon_launch() {
-            Ok(matrix_commander_ctrl) => {
-                matrix_commander_ctrl
-            }
+            Ok(matrix_commander_ctrl) => matrix_commander_ctrl,
             Err(e) => {
                 println!("!!! Fail to lauch matrix-commander: {}", e);
                 return
@@ -391,7 +392,10 @@ fn main() {
     let matrix_commander_raw_buffer =
         match matrix_commander.stdout.as_mut(){
             Some(matrix_commander_raw_buffer) => matrix_commander_raw_buffer,
-            None => return,
+            None => {
+                println!("!!! fail to attach buffer");
+                return
+            }
         };
 
     let mut matrix_commander_ready_buffer = BufReader::new(matrix_commander_raw_buffer);
@@ -436,28 +440,41 @@ fn main() {
                 let clean_room           =
                     match clean_room_origin(String::from(raw_data[0])) {
                         Ok(clean_room_ok) => clean_room_ok,
-                        Err(_e) => continue,
+                        Err(_e) => {
+                            line_from_buffer.clear();
+                            continue
+                        }
                     };
                 let clean_room_id           =
                     match clean_room_id(String::from(raw_data[0])) {
                         Ok(clean_room_id_ok) => clean_room_id_ok,
-                        Err(_e) => continue,
+                        Err(_e) => {
+                            line_from_buffer.clear();
+                            continue
+                        }
                     };
                 let clean_sender_id           =
                     match clean_sender_id(String::from(raw_data[1])) {
                         Ok(clean_sender_id_ok) => clean_sender_id_ok,
-                        Err(_e) => continue,
+                        Err(_e) => {
+                            line_from_buffer.clear();
+                            continue
+                        }
                     };
                 let clean_sender_name           =
                     match clean_sender_name(String::from(raw_data[1])) {
                         Ok(clean_sender_name_ok) => clean_sender_name_ok,
-                        Err(_e) => continue,
+                        Err(_e) => {
+                            line_from_buffer.clear();
+                            continue
+                        }
                     };
                 let clean_message        = String::from(raw_data[3]);
                 let incoming_message = Message{_room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
                 let _answer =
                     match incoming_message.thinking(&mut trigger_word_list, &connection_db){
                         Ok(answer_ctrl) => {
+                            println!("botbot: {}", answer_ctrl);
                             let _talking_status =
                                 match incoming_message.talking(answer_ctrl){
                                     Ok(child) => child.id(),
@@ -469,6 +486,7 @@ fn main() {
                         }
                         Err(e) => {
                             println!("ERROR: {}", e);
+                            line_from_buffer.clear();
                             continue
                         }
                     };
