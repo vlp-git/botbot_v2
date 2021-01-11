@@ -7,6 +7,7 @@ use sqlite::{Connection, State};
 use unidecode::unidecode;
 use procfs::process::Process;
 use rand::Rng;
+use regex::Regex;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  Structure et traits des messages reçus
@@ -434,7 +435,7 @@ fn main() {
 
             // _on ignore les reply qui commencent par '>'
             let reply_check = trigger.chars().nth(1).unwrap_or(' ');
-            if trigger.contains("botbotv2") && reply_check !=  '>' {
+            if trigger.contains("botbot") && reply_check !=  '>' {
 
                 // _construction du message: cf la struct
                 let clean_room           =
