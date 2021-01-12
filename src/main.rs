@@ -81,7 +81,7 @@ impl Message{
                         let answer_with_new_line = &answer_with_name[..].replace("%n", "\n");
                         Ok(answer_with_new_line.to_string())
                     }
-                    Err(e) => return Err(format!("ERROR: return answer - {}", e)),
+                    Err(e) => return Err(format!("ERROR: return answer - {}",  e)),
                 };
             answer
         }
@@ -164,7 +164,7 @@ fn return_answer(choice: String, connection_db: &Connection, trigger_word_list: 
         let mut rng = rand::thread_rng();
         Ok(tmp_answers[rng.gen_range(0..tmp_answers.len())].to_string())
     }else{
-        Err(format!("ERROR: no word found"))
+        Err(format!("ERROR: no word found for : {} ", choice))
     }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -381,7 +381,7 @@ fn main() {
     let matrix_pid =
         match Process::new(matrix_commander.id() as i32) {
             Ok(matrix_pid_ctrl) => {
-                println!(" > matrix-commander lauched: {}", matrix_pid_ctrl.pid);
+                println!(" > matrix-commander launched: pid {}", matrix_pid_ctrl.pid);
                 matrix_pid_ctrl
             }
             Err(e) => {
@@ -486,7 +486,7 @@ fn main() {
                                 };
                         }
                         Err(e) => {
-                            println!("ERROR: {}", e);
+                            println!("ERROR: talking - {}", e);
                             line_from_buffer.clear();
                             continue
                         }
