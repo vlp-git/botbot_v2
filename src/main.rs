@@ -7,7 +7,7 @@ use sqlite::{Connection, State};
 use unidecode::unidecode;
 use procfs::process::Process;
 use rand::Rng;
-use regex::Regex;
+//use regex::Regex;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  Structure et traits des messages reçus
@@ -327,6 +327,24 @@ fn matrix_commander_daemon_launch() -> Result<Child, Error> {
 
 fn main() {
 
+
+    // TEST
+    // let bpe_builder = BPE::from_files("./vocab.json", "./merges.txt");
+    // let bpe = bpe_builder
+    //     .dropout(0.1)
+    //     .unk_token("[UNK]".into())
+    //     .build();
+    //
+    // let mut tokenizer = Tokenizer::new(Box::new(bpe));
+    //
+    //
+    // let encoding = tokenizer.encode(EncodeInput::Single("Hey there!".into()))?;
+    // println!("{:?}", encoding.get_tokens());
+    // TEST
+
+
+
+
     println!("///// botbot v2 by lovely fdn team");
 
     // _initialisation de la liste des mots trigger: qui déclenchent une réponse de botbot
@@ -478,7 +496,9 @@ fn main() {
                             println!("botbot: {}", answer_ctrl);
                             let _talking_status =
                                 match incoming_message.talking(answer_ctrl){
-                                    Ok(child) => child.id(),
+                                    Ok(child) => {
+                                        child.id()
+                                    }
                                     Err(e) => {
                                         println!("ERROR talking: {}", e);
                                         0
@@ -486,7 +506,7 @@ fn main() {
                                 };
                         }
                         Err(e) => {
-                            println!("ERROR: talking - {}", e);
+                            println!("ERROR: thinking - {}", e);
                             line_from_buffer.clear();
                             continue
                         }
