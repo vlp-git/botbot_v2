@@ -146,7 +146,7 @@ fn del_chat(trigger: String, connection_db: &Connection, trigger_word_list: &mut
 fn return_answer(choice: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<String, String> {
     let mut tmp_answers: Vec<String> = Vec::new();
     for x in trigger_word_list {
-        let re_to_search = format!("\\s{}[\\s\\?!]", x);
+        let re_to_search = format!("\\s{}[\\s\\?!,]", x);
         let re = Regex::new(&re_to_search).unwrap();
         if  re.is_match(&choice) {
             let mut select_statement =
