@@ -7,7 +7,7 @@ use sqlite::{Connection, State};
 use unidecode::unidecode;
 use procfs::process::Process;
 use rand::Rng;
-//use regex::Regex;
+use regex::Regex;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  Structure et traits des messages reçus
@@ -146,7 +146,9 @@ fn del_chat(trigger: String, connection_db: &Connection, trigger_word_list: &mut
 fn return_answer(choice: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<String, String> {
     let mut tmp_answers: Vec<String> = Vec::new();
     for x in trigger_word_list {
-        if choice.contains(&x[..]) {
+        let re_to_search = format!("\\s{}[\\s\\?!]", x);
+        let re = Regex::new(&re_to_search).unwrap();
+        if  re.is_match(&choice) {
             let mut select_statement =
                 match connection_db.prepare("SELECT answer FROM talking where trigger=?"){
                     Ok(select_statement_ctrl) => select_statement_ctrl,
@@ -326,24 +328,6 @@ fn matrix_commander_daemon_launch() -> Result<Child, Error> {
 ////////////////////////  FONCTION principale
 
 fn main() {
-
-
-    // TEST
-    // let bpe_builder = BPE::from_files("./vocab.json", "./merges.txt");
-    // let bpe = bpe_builder
-    //     .dropout(0.1)
-    //     .unk_token("[UNK]".into())
-    //     .build();
-    //
-    // let mut tokenizer = Tokenizer::new(Box::new(bpe));
-    //
-    //
-    // let encoding = tokenizer.encode(EncodeInput::Single("Hey there!".into()))?;
-    // println!("{:?}", encoding.get_tokens());
-    // TEST
-
-
-
 
     println!("///// botbot v2 by lovely fdn team");
 
