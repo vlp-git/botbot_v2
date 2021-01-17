@@ -35,14 +35,14 @@ impl Message{
     }
 
     // _fonction qui détermine les actions de botbot lorsqu'il est déclenché
-    fn thinking(&self, trigger_word_list: &mut Vec<String>, connection_db: &Connection) -> Result<String, String> {
+    fn thinking(&self, admin_list: &Vec<String>, trigger_word_list: &mut Vec<String>, connection_db: &Connection) -> Result<String, String> {
         let choice = String::from(unidecode(&self.m_message).to_string());
         let mut botbot_phrase = String::from(unidecode(&self.m_message).to_string());
         // _uppercases
         botbot_phrase.make_ascii_lowercase();
         // _mode admin
         let answer =
-            if botbot_phrase.contains("botbot admin") && &self.sender_id == "@vlp:matrix.fdn.fr" {
+            if botbot_phrase.contains("botbot admin") && admin_list.contains(&self.sender_id) {
                 let admin_answer =
                     // _mode admin pour ajout de trigger
                     if botbot_phrase.contains("admin add") {
@@ -137,7 +137,15 @@ fn main() {
     let mut trigger_word_list: Vec<String> = Vec::new();
 
     // _liste des admins ayant accès au mode admin de botbot
-    let _admin_list = ["@vlp:matrix.fdn.fr", "@belette:uc.neviani.fr", "@afriqs:matrix.fdn.fr", "@asmadeus:codewreck.org", "@tom28:matrix.fdn.fr"];
+    let mut admin_list: Vec<String> = Vec::new();
+
+    // _team ADMINSYS
+    admin_list.push("@vlp:matrix.fdn.fr".to_string());
+    admin_list.push("@belette:uc.neviani.fr".to_string());
+    admin_list.push("@afriqs:matrix.fdn.fr".to_string());
+    admin_list.push("@asmadeus:codewreck.org".to_string());
+    admin_list.push("@tom28:matrix.fdn.fr".to_string());
+    admin_list.push("@khrys:matrix.fdn.fr".to_string());
 
     println!("[Database]");
 
@@ -271,7 +279,7 @@ fn main() {
                 let clean_message        = String::from(raw_data[3]);
                 let incoming_message = Message{_room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
                 let _answer =
-                    match incoming_message.thinking(&mut trigger_word_list, &connection_db){
+                    match incoming_message.thinking(&admin_list, &mut trigger_word_list, &connection_db){
                         Ok(answer_ctrl) => {
                             println!("botbot: {}", answer_ctrl);
                             let _talking_status =
