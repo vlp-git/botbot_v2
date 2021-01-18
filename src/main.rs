@@ -26,14 +26,6 @@ struct Message{
 }
 
 impl Message{
-    fn _print_full_message(&self){
-        println!("{}", self._room_origin);
-        println!("{}", self.room_id);
-        println!("{}", self.sender_id);
-        println!("{}", self.sender_name);
-        println!("{}", self.m_message);
-    }
-
     // _fonction qui détermine les actions de botbot lorsqu'il est déclenché
     fn thinking(&self, admin_list: &Vec<String>, trigger_word_list: &mut Vec<String>, connection_db: &Connection) -> Result<String, String> {
         let choice = String::from(unidecode(&self.m_message).to_string());
@@ -148,6 +140,17 @@ fn main() {
     admin_list.push("@khrys:matrix.fdn.fr".to_string());
 
     println!("[Database]");
+
+    // _connexion à la db ou création de la db si n'existe pas
+    // let connection_db =
+    //     match init_db (&mut trigger_word_list){
+    //         Ok(connection_db_ctrl) => connection_db_ctrl,
+    //         Err(e) => {
+    //             println!("!!! Error opening database: {}", e);
+    //             return
+    //         }
+    //     };
+
 
     // _connexion à la db ou création de la db si n'existe pas
     let connection_db =
@@ -276,29 +279,27 @@ fn main() {
                             continue
                         }
                     };
-                let clean_message        = String::from(raw_data[3]);
+                let clean_message = String::from(raw_data[3]);
                 let incoming_message = Message{_room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
-                let _answer =
-                    match incoming_message.thinking(&admin_list, &mut trigger_word_list, &connection_db){
-                        Ok(answer_ctrl) => {
-                            println!("botbot: {}", answer_ctrl);
-                            let _talking_status =
-                                match incoming_message.talking(answer_ctrl){
-                                    Ok(child) => {
-                                        child.id()
-                                    }
-                                    Err(e) => {
-                                        println!("ERROR talking: {}", e);
-                                        0
-                                    },
-                                };
-                        }
-                        Err(e) => {
-                            println!("ERROR: thinking - {}", e);
-                            line_from_buffer.clear();
-                            continue
-                        }
-                    };
+                match incoming_message.thinking(&admin_list, &mut trigger_word_list, &connection_db){
+                    Ok(answer_ctrl) => {
+                        println!("botbot: {}", answer_ctrl);
+                        let _talking_status =
+                            match incoming_message.talking(answer_ctrl){
+                                Ok(talking_child) => {
+                                    Ok(talking_child.id())
+                                }
+                                Err(e) => {
+                                    Err(format!("ERROR talking: {}", e))
+                                },
+                            };
+                    }
+                    Err(e) => {
+                        println!("ERROR: thinking - {}", e);
+                        line_from_buffer.clear();
+                        continue
+                    }
+                }
             }
         }
         // _vide la zone de lecture du buffer à chaque boucle
