@@ -145,7 +145,11 @@ pub fn get_answer(choice: String, connection_db: &Connection, trigger_word_list:
                     Err(e) => return Err(format!("ERROR: select binding trigger- {}", e)),
                 };
             while let State::Row = select_statement.next().unwrap() {
-                let blabla = select_statement.read::<String>(0).unwrap();
+                let blabla =
+                    match select_statement.read::<String>(0){
+                        Ok(blabla_ctrl) => blabla_ctrl,
+                        Err(_e) => continue,
+                    };
                 tmp_answers.push(blabla);
             }
             continue;
