@@ -79,8 +79,16 @@ pub fn add_chat(trigger: String, answer: String, connection_db: &Connection, tri
             Ok(insert_statement_ctrl) => insert_statement_ctrl,
             Err(e) => return Err(format!("ERROR: add prepare db - {}", e)),
           };
-        insert_statement.bind(1, &trigger[..]).unwrap();
-        insert_statement.bind(2, &answer[..]).unwrap();
+        let _bind1_statement =
+            match insert_statement.bind(1, &trigger[..]){
+                Ok(_bind1_statement_ctrl) => _bind1_statement_ctrl,
+                Err(e) => return Err(format!("ERROR: add binding trigger - {}", e)),
+            };
+        let _bind2_statement =
+            match insert_statement.bind(2, &answer[..]){
+                Ok(_bind2_statement_ctrl) => _bind2_statement_ctrl,
+                Err(e) => return Err(format!("ERROR: add binding answer - {}", e)),
+            };
         let _run_statement =
             match insert_statement.next() {
                 Ok(_run_statement_ctrl) => _run_statement_ctrl,
@@ -101,7 +109,11 @@ pub fn del_chat(trigger: String, connection_db: &Connection, trigger_word_list: 
             Ok(del_statement_ctrl) => del_statement_ctrl,
             Err(e) => return Err(format!("ERROR: del prepare db - {}", e)),
           };
-    del_statement.bind(1, &trigger[..]).unwrap();
+    let _bind_statement =
+      match del_statement.bind(1, &trigger[..]){
+          Ok(_bind_statement_ctrl) => _bind_statement_ctrl,
+          Err(e) => return Err(format!("ERROR: del binding trigger- {}", e)),
+      };
     let _run_statement =
         match del_statement.next() {
             Ok(_run_statement_ctrl) => _run_statement_ctrl,
@@ -115,14 +127,23 @@ pub fn get_answer(choice: String, connection_db: &Connection, trigger_word_list:
     let mut tmp_answers: Vec<String> = Vec::new();
     for x in trigger_word_list {
         let re_to_search = format!("\\s{}[\\s\\?!,]", x);
-        let re = Regex::new(&re_to_search).unwrap();
+        let re =
+            match Regex::new(&re_to_search){
+                Ok(re_ctrl) => re_ctrl,
+                Err(e) => return Err(format!("ERROR: setup regex - {}", e)),
+            };
+
         if  re.is_match(&choice) {
             let mut select_statement =
                 match connection_db.prepare("SELECT answer FROM talking where trigger=?"){
                     Ok(select_statement_ctrl) => select_statement_ctrl,
                     Err(e) =>  return Err(format!("ERROR: select prepare db - {}", e)),
                   };
-            select_statement.bind(1, &x[..]).unwrap();
+            let _bind_statement =
+                match select_statement.bind(1, &x[..]){
+                    Ok(_bind_statement_ctrl) => _bind_statement_ctrl,
+                    Err(e) => return Err(format!("ERROR: select binding trigger- {}", e)),
+                };
             while let State::Row = select_statement.next().unwrap() {
                 let blabla = select_statement.read::<String>(0).unwrap();
                 tmp_answers.push(blabla);
