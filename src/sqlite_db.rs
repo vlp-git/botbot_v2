@@ -144,7 +144,7 @@ pub fn get_answer(choice: String, connection_db: &Connection, trigger_word_list:
                     Ok(_bind_statement_ctrl) => _bind_statement_ctrl,
                     Err(e) => return Err(format!("ERROR: select binding trigger- {}", e)),
                 };
-            while let State::Row = select_statement.next().unwrap() {
+            while let Ok(State::Row) = select_statement.next() {
                 let blabla =
                     match select_statement.read::<String>(0){
                         Ok(blabla_ctrl) => blabla_ctrl,
