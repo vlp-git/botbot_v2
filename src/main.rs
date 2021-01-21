@@ -154,7 +154,7 @@ fn main() {
     // _initialisation de la liste des mots trigger: qui déclenchent une réponse de botbot
     // _la liste est placée dans un tableau remplis depuis la db pour pas à avoir à faire une requête
     // dans la db à chaque fois que botbot doit analyser les phrases.
-    let mut trigger_word_list: Vec<String> = Vec::new();
+    //let mut trigger_word_list: Vec<String> = Vec::new();
 
     // _liste des admins ayant accès au mode admin de botbot
     let mut adminsys_list: Vec<String> = Vec::new();
@@ -186,34 +186,16 @@ fn main() {
     println!("[Database]");
 
     // _connexion à la db ou création de la db si n'existe pas
-    // let connection_db =
-    //     match init_db (&mut trigger_word_list){
-    //         Ok(connection_db_ctrl) => connection_db_ctrl,
-    //         Err(e) => {
-    //             println!("!!! Error opening database: {}", e);
-    //             return
-    //         }
-    //     };
+    let (connection_db_result, mut trigger_word_list) = init_db ();
 
-
-    // _connexion à la db ou création de la db si n'existe pas
     let connection_db =
-        match Connection::open("worterkasten.db") {
+        match connection_db_result {
             Ok(connection_db_ctrl) => {
-                println!(" > Database opened");
-                    match init_db_connection(&connection_db_ctrl, &mut trigger_word_list) {
-                        Ok(init_db_ctrl) => {
-                            println!(" > Database initialized with {} words", init_db_ctrl);
-                        }
-                        Err(e) => {
-                            println!("!!! Database initialization failed: {}", e);
-                            return
-                        }
-                    };
+                println!(" > Database initialized with {} words", trigger_word_list.len());
                 connection_db_ctrl
             }
             Err(e) => {
-                println!("!!! Error opening database: {}", e);
+                println!("!!! Database initialization failed: {}", e);
                 return
             }
          };
