@@ -12,6 +12,7 @@ pub use sqlite_db::*;
 mod mgmt;
 mod matrix_commander;
 mod sqlite_db;
+use regex::Regex;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  Structure et traits des messages reçus
@@ -125,6 +126,10 @@ impl Message{
             };
         answer
     }
+    fn ticket(&self) -> Result<String, String> {
+        let ticket_url = format!("Ticket: https://tickets.fdn.fr/rt/Ticket/Display.html?id={}", &self.m_message[1..]);
+        Ok(ticket_url)
+    }
     fn talking(&self, phrase_to_say: String) -> Result<Child, String> {
         let mut blabla = "-m".to_string();
         blabla.push_str(&phrase_to_say[..]);
@@ -198,7 +203,7 @@ fn main() {
                 println!("!!! Database initialization failed: {}", e);
                 return
             }
-         };
+        };
 
     println!("[Matrix Connection]");
 
@@ -237,6 +242,16 @@ fn main() {
     let mut matrix_commander_ready_buffer = BufReader::new(matrix_commander_raw_buffer);
 
     let mut line_from_buffer = String::new();
+
+    let re_to_search = "#[0-9]{4,6}".to_string();
+    let re =
+        match Regex::new(&re_to_search){
+            Ok(re_ctrl) => re_ctrl,
+            Err(_e) => {
+                println!("!!! fail to build ticket regex");
+                return
+            }
+        };
 
     println!("[botbot is running]");
 
@@ -326,6 +341,70 @@ fn main() {
                         continue
                     }
                 }
+            }
+            else if re.is_match(&trigger) && reply_check !=  '>' {
+                let clean_room           =
+                    match clean_room_origin(String::from(raw_data[0])) {
+                        Ok(clean_room_ok) => clean_room_ok,
+                        Err(_e) => {
+                            line_from_buffer.clear();
+                            continue
+                        }
+                    };
+                    if clean_room == "fdn-tickets-internal" {
+                        let clean_room_id           =
+                            match clean_room_id(String::from(raw_data[0])) {
+                                Ok(clean_room_id_ok) => clean_room_id_ok,
+                                Err(_e) => {
+                                    line_from_buffer.clear();
+                                    continue
+                                }
+                            };
+                        let clean_sender_id           =
+                            match clean_sender_id(String::from(raw_data[1])) {
+                                Ok(clean_sender_id_ok) => clean_sender_id_ok,
+                                Err(_e) => {
+                                    line_from_buffer.clear();
+                                    continue
+                                }
+                            };
+                        let clean_sender_name           =
+                            match clean_sender_name(String::from(raw_data[1])) {
+                                Ok(clean_sender_name_ok) => clean_sender_name_ok,
+                                Err(_e) => {
+                                    line_from_buffer.clear();
+                                    continue
+                                }
+                            };
+
+                        let caps = re.captures(&trigger).unwrap();
+                        let clean_caps = match caps.get(0) {
+                            Some(clean_message_ctrl) => clean_message_ctrl,
+                            None => continue,
+                        };
+                        let pre_clean_message = clean_caps.as_str();
+                        let clean_message = pre_clean_message.to_string();
+                        let incoming_message = Message{_room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
+                        match incoming_message.ticket(){
+                            Ok(answer_ctrl) => {
+                                println!("{}", answer_ctrl);
+                                let _talking_status =
+                                    match incoming_message.talking(answer_ctrl){
+                                        Ok(talking_child) => {
+                                            Ok(talking_child.id())
+                                        }
+                                        Err(e) => {
+                                            Err(format!("ERROR ticket talking: {}", e))
+                                        },
+                                    };
+                            }
+                            Err(e) => {
+                                println!("ERROR: ticket - {}", e);
+                                line_from_buffer.clear();
+                                continue
+                            }
+                        }
+                    }
             }
         }
         // _vide la zone de lecture du buffer à chaque boucle
