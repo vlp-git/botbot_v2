@@ -97,7 +97,7 @@ impl Message{
                     liste_to_ping += &x[debut_mark..fin_mark];
                     liste_to_ping += ", ";
                 }
-                let chat_to_ping = format!("Hello les adminsys: {} vous contact ! {}", &self.sender_name, &liste_to_ping[0..liste_to_ping.len()-2]);
+                let chat_to_ping = format!("Hello les adminsys: {} vous contacte ! {}", &self.sender_name, &liste_to_ping[0..liste_to_ping.len()-2]);
                 Ok(chat_to_ping)
             } else {
                 // _réponse de botbot
