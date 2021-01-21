@@ -165,8 +165,6 @@ fn main() {
     admincore_list.push("@afriqs:matrix.fdn.fr".to_string());
     admincore_list.push("@asmadeus:codewreck.org".to_string());
     admincore_list.push("@tom28:matrix.fdn.fr".to_string());
-    admincore_list.push("@olb:matrix.org".to_string());
-    admincore_list.push("@vg:matrix.fdn.fr".to_string());
 
     // _team ADMINSYS
     adminsys_list.push("@vlp:matrix.fdn.fr".to_string());
@@ -178,13 +176,12 @@ fn main() {
     adminsys_list.push("@olb:matrix.org".to_string());
     adminsys_list.push("@vg:matrix.fdn.fr".to_string());
     adminsys_list.push("@blackmoor:matrix.fdn.fr".to_string());
-    adminsys_list.push("@capslock:matrix.fdn.fr".to_string());
     adminsys_list.push("@dino:matrix.fdn.fr".to_string());
-    adminsys_list.push("@domi:matrix.fdn.fr".to_string());
     adminsys_list.push("@hamo:matrix.fdn.fr".to_string());
     adminsys_list.push("@stephaneascoet:matrix.fdn.fr".to_string());
     adminsys_list.push("@symeon:matrix.fdn.fr".to_string());
     adminsys_list.push("@youpi:matrix.fdn.fr".to_string());
+    adminsys_list.push("@mlrx:matrix.fdn.fr".to_string());
 
     println!("[Database]");
 
