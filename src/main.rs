@@ -84,17 +84,12 @@ impl Message{
                 let mut iterator = admin_list.iter();
                 let mut liste_to_ping = String::from("ping: ");
                 while let Some(x) = iterator.next() {
-                    let debut_mark =
-                        match x.find("@") {
-                            Some(debut_mark_index) => debut_mark_index + 1,
-                            None => continue,
-                    };
                     let fin_mark =
                         match x.find(":") {
                             Some(fin_mark_index) => fin_mark_index,
                             None => continue,
                         };
-                    liste_to_ping += &x[debut_mark..fin_mark];
+                    liste_to_ping += &x[..fin_mark];
                     liste_to_ping += ", ";
                 }
                 let chat_to_ping = format!("Hello les adminsys: {} vous contacte ! {}", &self.sender_name, &liste_to_ping[0..liste_to_ping.len()-2]);
