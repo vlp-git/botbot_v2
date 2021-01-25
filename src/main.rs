@@ -159,25 +159,27 @@ fn main() {
                         },
                     };
                     let incoming_message = Message{_room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
-                    match incoming_message.thinking(&adminsys_list, &admincore_list, &mut trigger_word_list, &connection_db){
-                        Ok(answer_ctrl) => {
-                            println!("botbot: {}", answer_ctrl);
-                            let _talking_status =
-                                match incoming_message.talking(answer_ctrl){
-                                    Ok(talking_child) => {
-                                        Ok(talking_child.id())
-                                    }
-                                    Err(e) => {
-                                        Err(format!("ERROR talking: {}", e))
-                                    },
-                                };
-                        }
-                        Err(e) => {
-                            println!("ERROR: thinking - {}", e);
-                            line_from_buffer.clear();
-                            continue
-                        }
-                    }
+                    let _talking_check =
+                        match incoming_message.thinking(&adminsys_list, &admincore_list, &mut trigger_word_list, &connection_db){
+                            Ok(answer_ctrl) => {
+                                println!("botbot: {}", answer_ctrl);
+                                let _talking_status =
+                                    match incoming_message.talking(answer_ctrl){
+                                        Ok(talking_child) => {
+                                            Ok(talking_child.id())
+                                        }
+                                        Err(e) => {
+                                            println!("ERROR: talking - {}", e);
+                                            Err(format!("ERROR talking: {}", e))
+                                        },
+                                    };
+                            }
+                            Err(e) => {
+                                println!("ERROR: thinking - {}", e);
+                                line_from_buffer.clear();
+                                continue
+                            }
+                        };
             }
             else if ticket_re.is_match(&trigger) && reply_check !=  '>' {
                 let (clean_room, clean_room_id, clean_sender_id, clean_sender_name, clean_message) =
@@ -198,25 +200,26 @@ fn main() {
                 };
                 let clean_message = clean_caps.to_string();
                 let incoming_message = Message{_room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
-                match incoming_message.ticket(){
-                    Ok(answer_ctrl) => {
-                        println!("{}", answer_ctrl);
-                        let _talking_status =
-                            match incoming_message.talking(answer_ctrl){
-                                Ok(talking_child) => {
-                                    Ok(talking_child.id())
-                                }
-                                Err(e) => {
-                                    Err(format!("ERROR ticket talking: {}", e))
-                                },
-                            };
-                    }
-                    Err(e) => {
-                        println!("ERROR: ticket - {}", e);
-                        line_from_buffer.clear();
-                        continue
-                    }
-                }
+                let _ticket_check=
+                    match incoming_message.ticket(){
+                        Ok(answer_ctrl) => {
+                            println!("{}", answer_ctrl);
+                            let _talking_status =
+                                match incoming_message.talking(answer_ctrl){
+                                    Ok(talking_child) => {
+                                        Ok(talking_child.id())
+                                    }
+                                    Err(e) => {
+                                        Err(format!("ERROR ticket talking: {}", e))
+                                    },
+                                };
+                        }
+                        Err(e) => {
+                            println!("ERROR: ticket - {}", e);
+                            line_from_buffer.clear();
+                            continue
+                        }
+                    };
                 }
             }
         }
