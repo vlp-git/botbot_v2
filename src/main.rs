@@ -4,12 +4,12 @@
 use std::io::{BufRead, BufReader};
 use procfs::process::Process;
 use regex::Regex;
-pub use message::*;
 mod message;
-pub use matrix_commander::*;
-mod matrix_commander;
-pub use sqlite_db::*;
-mod sqlite_db;
+use crate::message::*;
+mod database;
+use crate::database::*;
+mod matrix;
+use crate::matrix::*;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  FONCTION principale
@@ -205,6 +205,9 @@ fn main() {
                 }
             }
             else if ticket_re.is_match(&trigger) && reply_check !=  '>' {
+
+                // let clean_trame =
+
                 let clean_room           =
                     match clean_room_origin(String::from(raw_data[0])) {
                         Ok(clean_room_ok) => clean_room_ok,

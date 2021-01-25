@@ -2,26 +2,25 @@ use unidecode::unidecode;
 use sqlite::Connection;
 use std::process::{Command, Child};
 pub use message_mgmt::*;
-mod message_mgmt;
-pub use message_sql::*;
-mod message_sql;
+pub mod message_mgmt;
+use crate::database::*;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  Structure et traits des messages reçus
 
 // _structure d'un Message
-struct Message{
-    _room_origin: String,
-    room_id: String,
-    sender_id: String,
-    sender_name: String,
-    m_message: String,
+pub struct Message{
+    pub _room_origin: String,
+    pub room_id: String,
+    pub sender_id: String,
+    pub sender_name: String,
+    pub m_message: String,
 }
 
 // _traits de Message
 impl Message{
     // _détermine les actions de botbot lorsqu'il est déclenché
-    fn thinking(&self, adminsys_list: &Vec<String>, admincore_list: &Vec<String>, trigger_word_list: &mut Vec<String>, connection_db: &Connection) -> Result<String, String> {
+    pub fn thinking(&self, adminsys_list: &Vec<String>, admincore_list: &Vec<String>, trigger_word_list: &mut Vec<String>, connection_db: &Connection) -> Result<String, String> {
         let choice = String::from(unidecode(&self.m_message).to_string());
         let mut botbot_phrase = String::from(unidecode(&self.m_message).to_string());
         // _uppercases
@@ -121,14 +120,14 @@ impl Message{
     }
 
     // _détermine les actions de botbot lorsqu'il voit un numéro de ticket
-    fn ticket(&self) -> Result<String, String> {
+    pub fn ticket(&self) -> Result<String, String> {
         // _ajoute au numéro de ticket l'url de RT
         let ticket_url = format!("Ticket: https://tickets.fdn.fr/rt/Ticket/Display.html?id={}", &self.m_message[1..]);
         Ok(ticket_url)
     }
 
     // _fait parler botbot
-    fn talking(&self, phrase_to_say: String) -> Result<Child, String> {
+    pub fn talking(&self, phrase_to_say: String) -> Result<Child, String> {
         let mut blabla = "-m".to_string();
         blabla.push_str(&phrase_to_say[..]);
         let mut room = "-r".to_string();
