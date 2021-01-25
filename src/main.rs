@@ -148,128 +148,76 @@ fn main() {
             // _on ignore les reply qui commencent par '>'
             let reply_check = trigger.chars().nth(1).unwrap_or(' ');
             if trigger.contains("botbot") && reply_check !=  '>' {
-
-                // _construction du message: cf la struct
-                let clean_room           =
-                    match clean_room_origin(String::from(raw_data[0])) {
-                        Ok(clean_room_ok) => clean_room_ok,
+                let (clean_room, clean_room_id, clean_sender_id, clean_sender_name, clean_message) =
+                    match clean_trame(raw_data){
+                        Ok(trame_ctrl) => {
+                            trame_ctrl
+                        }
                         Err(_e) => {
                             line_from_buffer.clear();
                             continue
-                        }
+                        },
                     };
-                let clean_room_id           =
-                    match clean_room_id(String::from(raw_data[0])) {
-                        Ok(clean_room_id_ok) => clean_room_id_ok,
-                        Err(_e) => {
+                    let incoming_message = Message{_room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
+                    match incoming_message.thinking(&adminsys_list, &admincore_list, &mut trigger_word_list, &connection_db){
+                        Ok(answer_ctrl) => {
+                            println!("botbot: {}", answer_ctrl);
+                            let _talking_status =
+                                match incoming_message.talking(answer_ctrl){
+                                    Ok(talking_child) => {
+                                        Ok(talking_child.id())
+                                    }
+                                    Err(e) => {
+                                        Err(format!("ERROR talking: {}", e))
+                                    },
+                                };
+                        }
+                        Err(e) => {
+                            println!("ERROR: thinking - {}", e);
                             line_from_buffer.clear();
                             continue
                         }
-                    };
-                let clean_sender_id           =
-                    match clean_sender_id(String::from(raw_data[1])) {
-                        Ok(clean_sender_id_ok) => clean_sender_id_ok,
+                    }
+            }
+            else if ticket_re.is_match(&trigger) && reply_check !=  '>' {
+                let (clean_room, clean_room_id, clean_sender_id, clean_sender_name, clean_message) =
+                    match clean_trame(raw_data){
+                        Ok(trame_ctrl) => {
+                            trame_ctrl
+                        }
                         Err(_e) => {
                             line_from_buffer.clear();
                             continue
-                        }
+                        },
                     };
-                let clean_sender_name           =
-                    match clean_sender_name(String::from(raw_data[1])) {
-                        Ok(clean_sender_name_ok) => clean_sender_name_ok,
-                        Err(_e) => {
-                            line_from_buffer.clear();
-                            continue
-                        }
-                    };
-                let clean_message = String::from(raw_data[3]);
+                if clean_room == "fdn-tickets-internal" {
+                let caps = ticket_re.captures(&clean_message).unwrap();
+                let clean_caps = match caps.get(0) {
+                    Some(clean_caps_ctrl) => clean_caps_ctrl.as_str(),
+                    None => continue,
+                };
+                let clean_message = clean_caps.to_string();
                 let incoming_message = Message{_room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
-                match incoming_message.thinking(&adminsys_list, &admincore_list, &mut trigger_word_list, &connection_db){
+                match incoming_message.ticket(){
                     Ok(answer_ctrl) => {
-                        println!("botbot: {}", answer_ctrl);
+                        println!("{}", answer_ctrl);
                         let _talking_status =
                             match incoming_message.talking(answer_ctrl){
                                 Ok(talking_child) => {
                                     Ok(talking_child.id())
                                 }
                                 Err(e) => {
-                                    Err(format!("ERROR talking: {}", e))
+                                    Err(format!("ERROR ticket talking: {}", e))
                                 },
                             };
                     }
                     Err(e) => {
-                        println!("ERROR: thinking - {}", e);
+                        println!("ERROR: ticket - {}", e);
                         line_from_buffer.clear();
                         continue
                     }
                 }
-            }
-            else if ticket_re.is_match(&trigger) && reply_check !=  '>' {
-
-                // let clean_trame =
-
-                let clean_room           =
-                    match clean_room_origin(String::from(raw_data[0])) {
-                        Ok(clean_room_ok) => clean_room_ok,
-                        Err(_e) => {
-                            line_from_buffer.clear();
-                            continue
-                        }
-                    };
-                    if clean_room == "fdn-tickets-internal" {
-                        let clean_room_id           =
-                            match clean_room_id(String::from(raw_data[0])) {
-                                Ok(clean_room_id_ok) => clean_room_id_ok,
-                                Err(_e) => {
-                                    line_from_buffer.clear();
-                                    continue
-                                }
-                            };
-                        let clean_sender_id           =
-                            match clean_sender_id(String::from(raw_data[1])) {
-                                Ok(clean_sender_id_ok) => clean_sender_id_ok,
-                                Err(_e) => {
-                                    line_from_buffer.clear();
-                                    continue
-                                }
-                            };
-                        let clean_sender_name           =
-                            match clean_sender_name(String::from(raw_data[1])) {
-                                Ok(clean_sender_name_ok) => clean_sender_name_ok,
-                                Err(_e) => {
-                                    line_from_buffer.clear();
-                                    continue
-                                }
-                            };
-
-                        let caps = ticket_re.captures(&trigger).unwrap();
-                        let clean_caps = match caps.get(0) {
-                            Some(clean_message_ctrl) => clean_message_ctrl,
-                            None => continue,
-                        };
-                        let pre_clean_message = clean_caps.as_str();
-                        let clean_message = pre_clean_message.to_string();
-                        let incoming_message = Message{_room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
-                        match incoming_message.ticket(){
-                            Ok(answer_ctrl) => {
-                                println!("{}", answer_ctrl);
-                                let _talking_status =
-                                    match incoming_message.talking(answer_ctrl){
-                                        Ok(talking_child) => {
-                                            Ok(talking_child.id())
-                                        }
-                                        Err(e) => {
-                                            Err(format!("ERROR ticket talking: {}", e))
-                                        },
-                                    };
-                            }
-                            Err(e) => {
-                                println!("ERROR: ticket - {}", e);
-                                line_from_buffer.clear();
-                                continue
-                            }
-                        }
-                    }
+                }
             }
         }
         // _vide la zone de lecture du buffer à chaque boucle
