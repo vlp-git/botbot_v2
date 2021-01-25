@@ -148,7 +148,7 @@ fn main() {
             // _on ignore les reply qui commencent par '>'
             let reply_check = trigger.chars().nth(1).unwrap_or(' ');
             if trigger.contains("botbot") && reply_check !=  '>' {
-                let (clean_room, clean_room_id, clean_sender_id, clean_sender_name, clean_message) =
+                let (clean_room_id, clean_room, clean_sender_id, clean_sender_name, clean_message) =
                     match clean_trame(raw_data){
                         Ok(trame_ctrl) => {
                             trame_ctrl
@@ -182,7 +182,7 @@ fn main() {
                         };
             }
             else if ticket_re.is_match(&trigger) && reply_check !=  '>' {
-                let (clean_room, clean_room_id, clean_sender_id, clean_sender_name, clean_message) =
+                let (clean_room_id, clean_room, clean_sender_id, clean_sender_name, clean_message) =
                     match clean_trame(raw_data){
                         Ok(trame_ctrl) => {
                             trame_ctrl
