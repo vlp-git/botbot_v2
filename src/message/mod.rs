@@ -1,9 +1,9 @@
 use unidecode::unidecode;
 use sqlite::Connection;
 use std::process::{Command, Child};
+use crate::database::{get_answer, add_chat, del_chat};
+mod message_mgmt;
 pub use message_mgmt::*;
-pub mod message_mgmt;
-use crate::database::*;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  Structure et traits des messages reçus
