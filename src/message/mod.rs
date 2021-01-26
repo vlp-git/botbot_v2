@@ -10,7 +10,7 @@ pub use message_mgmt::*;
 
 // _structure d'un Message
 pub struct Message{
-    pub _room_origin: String,
+    pub room_origin: String,
     pub room_id: String,
     pub sender_id: String,
     pub sender_name: String,
@@ -120,10 +120,9 @@ impl Message{
     }
 
     // _détermine les actions de botbot lorsqu'il voit un numéro de ticket
-    pub fn ticket(&self) -> Result<String, String> {
-        // _ajoute au numéro de ticket l'url de RT
-        let ticket_url = format!("Ticket: https://tickets.fdn.fr/rt/Ticket/Display.html?id={}", &self.m_message[1..]);
-        Ok(ticket_url)
+    pub fn ticket(&self, ticket_number: String) -> Result<String, String> {
+       let ticket_url = format!("Ticket: https://tickets.fdn.fr/rt/Ticket/Display.html?id={}", ticket_number);
+       Ok(ticket_url)
     }
 
     // _fait parler botbot

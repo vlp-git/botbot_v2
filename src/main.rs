@@ -165,24 +165,32 @@ fn main() {
                         },
                     };
                     // _création d'un Message
-                    let incoming_message = Message{_room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
-                    // _retour de la réponse en fonction du trigger (botbot || #ticket) dans raw_message via la methode .thinking
+                    let incoming_message = Message{room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
+                    // _retour de la réponse en fonction du global trigger (botbot || #ticket) dans raw_message via la methode .thinking
                     let trigger_answer_result =
                         if raw_message.contains("botbot") {
                                 let thinking_check =
                                     match incoming_message.thinking(&adminsys_list, &admincore_list, &mut trigger_word_list, &connection_db){
-                                        Ok(answer_ctrl) => {
-                                            Ok(answer_ctrl)
-                                        }
-                                        Err(e) => {
-                                            Err(format!("ERROR botbot thinking: {}", e))
-                                        }
+                                        Ok(answer_ctrl) => Ok(answer_ctrl),
+                                        Err(e) => Err(format!("ERROR botbot thinking: {}", e)),
                                     };
                                 thinking_check
-                        } else if ticket_re.is_match(&raw_message) {
-                            Ok("plop".to_string())
+                        } else if ticket_re.is_match(&raw_message)  && incoming_message.room_origin == "fdn-tickets-internal" {
+                                //_isole le numéro du ticket avec le regex
+                                let regex_capture = ticket_re.captures(&incoming_message.m_message).unwrap();
+                                let raw_ticket_number = match regex_capture.get(0) {
+                                    Some(raw_ticket_number_ctrl) => raw_ticket_number_ctrl.as_str(),
+                                    None => continue,
+                                };
+                                let ticket_number = raw_ticket_number.to_string();
+                                let ticket_check=
+                                match incoming_message.ticket(ticket_number){
+                                    Ok(answer_ctrl) => Ok(answer_ctrl),
+                                    Err(e) => Err(format!("ERROR ticket: {}", e)),
+                                };
+                                ticket_check
                         } else {
-                            Err(format!("No global trigger found"))
+                                Err(format!("No global trigger found"))
                         };
                     // _controle du résultat de .thinking si ok affichage de la réponse en console
                     // _si error: vide buffer + sortie de loop
@@ -198,7 +206,7 @@ fn main() {
                                 continue
                             }
                         };
-                    // _affichage de la réponse dans la room_id
+                    // _affichage de la réponse dans la room
                     // _si error: vide buffer + sortie de loop
                     let _talking_status =
                         match incoming_message.talking(trigger_answer){
@@ -211,7 +219,7 @@ fn main() {
                         };
                 }
             }
-            // _vide la zone de lecture du buffer à chaque boucle
+            // _vide le du buffer à chaque boucle
             line_from_buffer.clear();
         }
 }
