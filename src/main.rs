@@ -201,7 +201,7 @@ fn main() {
                                 trigger_answer_result_ctrl
                             }
                             Err(e) =>  {
-                                println!("Error: {}", e);
+                                //println!("Error: {}", e);
                                 line_from_buffer.clear();
                                 continue
                             }
