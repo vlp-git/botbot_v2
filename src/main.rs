@@ -164,7 +164,6 @@ fn main() {
                             continue
                         },
                     };
-                    println!("debug: {}", clean_message);
                     // _création d'un Message
                     let incoming_message = Message{room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
                     // _retour de la réponse en fonction du global trigger (botbot || #ticket) dans raw_message via la methode .thinking
@@ -198,7 +197,7 @@ fn main() {
                     let trigger_answer =
                         match trigger_answer_result {
                             Ok(trigger_answer_result_ctrl) => {
-                                println!("Botbot {}", trigger_answer_result_ctrl);
+                                println!("Botbot: {}", trigger_answer_result_ctrl);
                                 trigger_answer_result_ctrl
                             }
                             Err(e) =>  {
@@ -212,8 +211,8 @@ fn main() {
                     let _talking_status =
                         match incoming_message.talking(trigger_answer){
                             Ok(talking_status_ctrl) => talking_status_ctrl.id(),
-                            Err(e) =>  {
-                                println!("Error: {}", e);
+                            Err(_e) =>  {
+                                //println!("Error: {}", e);
                                 line_from_buffer.clear();
                                 continue
                             }
