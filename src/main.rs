@@ -169,6 +169,7 @@ fn main() {
                     // _retour de la réponse en fonction du global trigger (botbot || #ticket) dans raw_message via la methode .thinking
                     let trigger_answer_result =
                         if raw_message.contains("botbot") {
+                            println!("PLOP");
                                 let thinking_check =
                                     match incoming_message.thinking(&adminsys_list, &admincore_list, &mut trigger_word_list, &connection_db){
                                         Ok(answer_ctrl) => Ok(answer_ctrl),
