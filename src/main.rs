@@ -164,12 +164,12 @@ fn main() {
                             continue
                         },
                     };
+                    println!("debug: {}", clean_message);
                     // _création d'un Message
                     let incoming_message = Message{room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
                     // _retour de la réponse en fonction du global trigger (botbot || #ticket) dans raw_message via la methode .thinking
                     let trigger_answer_result =
                         if raw_message.contains("botbot") {
-                            println!("PLOP");
                                 let thinking_check =
                                     match incoming_message.thinking(&adminsys_list, &admincore_list, &mut trigger_word_list, &connection_db){
                                         Ok(answer_ctrl) => Ok(answer_ctrl),
