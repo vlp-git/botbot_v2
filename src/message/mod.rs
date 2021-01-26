@@ -121,7 +121,7 @@ impl Message{
 
     // _détermine les actions de botbot lorsqu'il voit un numéro de ticket
     pub fn ticket(&self, ticket_number: String) -> Result<String, String> {
-       let ticket_url = format!("Ticket: https://tickets.fdn.fr/rt/Ticket/Display.html?id={}", ticket_number);
+       let ticket_url = format!("Ticket: https://tickets.fdn.fr/rt/Ticket/Display.html?id={}", &ticket_number[1..]);
        Ok(ticket_url)
     }
 

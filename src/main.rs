@@ -124,6 +124,8 @@ fn main() {
 
     println!("[botbot is running]");
 
+    line_from_buffer.clear();
+
     // _boucle global qui est bloquante à cause de read.line qui attend un '\n' pour avancer
     loop {
         // _vérifie que le 'processus' de matrix-commander existe toujours en mémoire sinon arréte le program
