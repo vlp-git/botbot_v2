@@ -201,7 +201,7 @@ fn main() {
                                 trigger_answer_result_ctrl
                             }
                             Err(e) =>  {
-                                //println!("Error: {}", e);
+                                println!("Error: {}", e);
                                 line_from_buffer.clear();
                                 continue
                             }
@@ -211,8 +211,8 @@ fn main() {
                     let _talking_status =
                         match incoming_message.talking(trigger_answer){
                             Ok(talking_status_ctrl) => talking_status_ctrl.id(),
-                            Err(_e) =>  {
-                                //println!("Error: {}", e);
+                            Err(e) =>  {
+                                println!("Error: {}", e);
                                 line_from_buffer.clear();
                                 continue
                             }

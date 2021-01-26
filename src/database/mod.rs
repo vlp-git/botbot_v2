@@ -134,6 +134,6 @@ pub fn get_answer(choice: String, connection_db: &Connection, trigger_word_list:
         let mut rng = rand::thread_rng();
         Ok(tmp_answers[rng.gen_range(0..tmp_answers.len())].to_string())
     }else{
-        Err(format!("ERROR: no word found for : {} ", choice))
+        Err(format!("ERROR: no word found for : {}", choice))
     }
 }
