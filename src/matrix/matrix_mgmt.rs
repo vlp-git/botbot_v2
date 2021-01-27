@@ -80,24 +80,28 @@ pub fn clean_trame(matrix_trame:Vec<&str>) -> Result <(String,String,String,Stri
     let clean_room_id           =
         match clean_room_id(String::from(matrix_trame[0])) {
             Ok(clean_room_id_ok) => clean_room_id_ok,
-            Err(e) => return Err(format!("ERROR: clean_trame - {}", e)),
+            Err(e) => return Err(format!("ERROR: clean_trame {}", e)),
         };
     let clean_room           =
         match clean_room_origin(String::from(matrix_trame[0])) {
             Ok(clean_room_ok) => clean_room_ok,
-            Err(e) => return Err(format!("ERROR: clean_trame - {}", e)),
+            Err(e) => return Err(format!("ERROR: clean_trame {}", e)),
         };
     let clean_sender_id           =
         match clean_sender_id(String::from(matrix_trame[1])) {
             Ok(clean_sender_id_ok) => clean_sender_id_ok,
-            Err(e) => return Err(format!("ERROR: clean_trame - {}", e)),
+            Err(e) => return Err(format!("ERROR: clean_trame {}", e)),
         };
     let clean_sender_name           =
         match clean_sender_name(String::from(matrix_trame[1])) {
             Ok(clean_sender_name_ok) => clean_sender_name_ok,
-            Err(e) => return Err(format!("ERROR: clean_trame - {}", e)),
+            Err(e) => return Err(format!("ERROR: clean_trame {}", e)),
         };
-    let clean_message = String::from(matrix_trame[3]);
+    let raw_message = String::from(matrix_trame[3]);
+    // _on retire le \n de fin de trame
+    let pre_clean_message = &raw_message[1..(raw_message.len()-1)];
+    // _on retransforme en string
+    let clean_message = pre_clean_message.to_string();
 
     Ok((clean_room_id, clean_room, clean_sender_id, clean_sender_name, clean_message))
 }

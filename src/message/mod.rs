@@ -40,15 +40,15 @@ impl Message{
                                                       let process_to_add =
                                                           match add_chat(trigger_to_add_ctrl, answer_to_add_ctrl, connection_db, trigger_word_list) {
                                                               Ok(chat_to_add_ctrl) => Ok(format!("[admin mode by: {}] {} ajouté !", &self.sender_name, chat_to_add_ctrl)),
-                                                              Err(e) => Err(format!("ERROR: chat_to_add process to add - {}", e)),
+                                                              Err(e) => Err(format!("ERROR: chat_to_add process to add {}", e)),
                                                           };
                                                       process_to_add
                                                   }
-                                                  Err(e) => Err(format!("ERROR: chat_to_add get answer - {}", e)),
+                                                  Err(e) => Err(format!("ERROR: chat_to_add get answer {}", e)),
                                               };
                                       answer_to_add
                                   }
-                                  Err(e) => Err(format!("ERROR: chat_to_add get trigger- {}", e)),
+                                  Err(e) => Err(format!("ERROR: chat_to_add get trigger {}", e)),
                               };
                         chat_to_add
                     // _mode admin pour suppression de trigger
@@ -59,11 +59,11 @@ impl Message{
                                     let proceed_to_del =
                                         match del_chat(trigger_to_del_ctrl, connection_db, trigger_word_list) {
                                             Ok(_chat_to_del_ctrl) => Ok(format!("[admin mode by: {}] {} supprimé !", &self.sender_name, _chat_to_del_ctrl)),
-                                            Err(e) => Err(format!("ERROR: chat_to_del proceed to del - {}", e)),
+                                            Err(e) => Err(format!("ERROR: chat_to_del proceed to del {}", e)),
                                         };
                                         proceed_to_del
                                 }
-                                Err(e) => Err(format!("ERROR: chat_to_del match trigger - {}", e)),
+                                Err(e) => Err(format!("ERROR: chat_to_del match trigger {}", e)),
                             };
                         chat_to_del
                     // _fail de commande admin
@@ -112,7 +112,7 @@ impl Message{
                             let answer_with_new_line = &answer_with_name[..].replace("%n", "\n");
                             Ok(answer_with_new_line.to_string())
                         }
-                        Err(e) => Err(format!("ERROR: return answer - {}",  e)),
+                        Err(e) => Err(format!("ERROR: return answer {}",  e)),
                     };
                 chat_answer
             };
