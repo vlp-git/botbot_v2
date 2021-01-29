@@ -18,40 +18,13 @@ fn main() {
 
     println!("///// botbot v2 by lovely fdn team");
 
-    // _liste des admins ayant accès au mode admin de botbot
-    let mut adminsys_list: Vec<String> = Vec::new();
-    let mut admincore_list: Vec<String> = Vec::new();
-
-    // _team ADMINCORE
-    admincore_list.push("@belette:uc.neviani.fr".to_string());
-    admincore_list.push("@afriqs:matrix.fdn.fr".to_string());
-    admincore_list.push("@asmadeus:codewreck.org".to_string());
-    admincore_list.push("@tom28:matrix.fdn.fr".to_string());
-
-    // _team ADMINSYS
-    adminsys_list.push("@vlp:matrix.fdn.fr".to_string());
-    adminsys_list.push("@belette:uc.neviani.fr".to_string());
-    adminsys_list.push("@afriqs:matrix.fdn.fr".to_string());
-    adminsys_list.push("@asmadeus:codewreck.org".to_string());
-    adminsys_list.push("@tom28:matrix.fdn.fr".to_string());
-    adminsys_list.push("@khrys:matrix.fdn.fr".to_string());
-    adminsys_list.push("@olb:matrix.org".to_string());
-    adminsys_list.push("@vg:matrix.fdn.fr".to_string());
-    adminsys_list.push("@blackmoor:matrix.fdn.fr".to_string());
-    adminsys_list.push("@dino:matrix.fdn.fr".to_string());
-    adminsys_list.push("@hamo:matrix.fdn.fr".to_string());
-    adminsys_list.push("@stephaneascoet:matrix.fdn.fr".to_string());
-    adminsys_list.push("@symeon:matrix.fdn.fr".to_string());
-    adminsys_list.push("@youpi:matrix.fdn.fr".to_string());
-    adminsys_list.push("@mlrx:matrix.fdn.fr".to_string());
-
     println!("[Database]");
 
     // _connexion à la db ou création de la db si n'existe pas
     // _initialisation de la liste des mots trigger "trigger_word_list": qui déclenchent une réponse de botbot
     // _la liste est placée dans un tableau remplis depuis la db pour pas à avoir à faire une requête
     // dans la db à chaque fois que botbot doit analyser les phrases.
-    let (connection_db_result, mut trigger_word_list) = init_db ();
+    let (connection_db_result, mut trigger_word_list, adminsys_list, admincore_list) = init_db ();
 
     // _controle de la connexion à la db
     // _si error on quite le programme
@@ -167,14 +140,14 @@ fn main() {
                         },
                     };
                     // _création d'un Message
-                    let incoming_message = Message{room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
+                    let mut incoming_message = Message{room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
                     // _retour de la réponse en fonction du global trigger (botbot || #ticket) dans raw_message via la methode .thinking
                     let trigger_answer_result =
                         if raw_message.contains("botbot") {
                                 let thinking_check =
                                     match incoming_message.thinking(&adminsys_list, &admincore_list, &mut trigger_word_list, &connection_db){
                                         Ok(answer_ctrl) => Ok(answer_ctrl),
-                                        Err(e) => Err(format!("ERROR botbot thinking: {}", e)),
+                                        Err(e) => Err(format!("Message from {}: {}", incoming_message.sender_name, e)),
                                     };
                                 thinking_check
                         } else if ticket_re.is_match(&raw_message)  && incoming_message.room_origin == "fdn-tickets-internal" {
@@ -188,18 +161,18 @@ fn main() {
                                 let ticket_check=
                                 match incoming_message.ticket(ticket_number){
                                     Ok(answer_ctrl) => Ok(answer_ctrl),
-                                    Err(e) => Err(format!("ERROR ticket: {}", e)),
+                                    Err(e) => Err(format!("ticket: {}", e)),
                                 };
                                 ticket_check
                         } else {
-                                Err(format!("No global trigger found"))
+                                Err(format!("Message from {}: No global trigger found", incoming_message.sender_name))
                         };
                     // _controle du résultat de .thinking si ok affichage de la réponse en console
                     // _si error: vide buffer + sortie de loop
                     let trigger_answer =
                         match trigger_answer_result {
                             Ok(trigger_answer_result_ctrl) => {
-                                println!("Botbot: {}", trigger_answer_result_ctrl);
+                                println!("Botbot Message from {}: {}", incoming_message.sender_name, trigger_answer_result_ctrl);
                                 trigger_answer_result_ctrl
                             }
                             Err(e) =>  {

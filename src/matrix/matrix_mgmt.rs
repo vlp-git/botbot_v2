@@ -70,7 +70,8 @@ pub fn clean_sender_name(raw_sender_name:String) -> Result<String, String> {
         Err("clean_sender_name ERROR: Matrix-Commander output unreadable".to_string())
     } else {
         let raw_sender_name = &raw_sender_name[debut..fin];
-        Ok(raw_sender_name.to_string())
+        let no_irc_sender_name = raw_sender_name.replace(" (IRC)","");
+        Ok(no_irc_sender_name.to_string())
     }
 }
 

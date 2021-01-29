@@ -20,7 +20,7 @@ pub struct Message{
 // _traits de Message
 impl Message{
     // _détermine les actions de botbot lorsqu'il est déclenché
-    pub fn thinking(&self, adminsys_list: &Vec<String>, admincore_list: &Vec<String>, trigger_word_list: &mut Vec<String>, connection_db: &Connection) -> Result<String, String> {
+    pub fn thinking(&mut self, adminsys_list: &Vec<String>, admincore_list: &Vec<String>, trigger_word_list: &mut Vec<String>, connection_db: &Connection) -> Result<String, String> {
         let choice = String::from(unidecode(&self.m_message).to_string());
         let mut botbot_phrase = String::from(unidecode(&self.m_message).to_string());
         // _uppercases
@@ -66,24 +66,41 @@ impl Message{
                                 Err(e) => Err(format!("ERROR: chat_to_del match trigger {}", e)),
                             };
                         chat_to_del
-                    // _fail de commande admin
-                    } else if botbot_phrase.contains("admin alert") {
-                        Ok("plop".to_string())
                     } else {
                         Err("ERROR: no admin command".to_string())
                     };
                 admin_answer
             } else if botbot_phrase.contains("ping adminsys") {
-                let mut iterator = adminsys_list.iter();
+                let mut iterator_sys = adminsys_list.iter();
+                let mut iterator_core = admincore_list.iter();
                 let mut liste_to_ping = String::from("ping: ");
-                while let Some(x) = iterator.next() {
+                while let Some(x) = iterator_sys.next() {
                     let fin_mark =
                         match x.find(":") {
                             Some(fin_mark_index) => fin_mark_index,
                             None => continue,
                         };
-                    liste_to_ping += &x[..fin_mark];
-                    liste_to_ping += ", ";
+                    let admin_name_to_add = &x[1..fin_mark];
+                    if admin_name_to_add !=  &self.sender_name{
+                        liste_to_ping += admin_name_to_add;
+                        liste_to_ping += ", ";
+                    }else{
+                        continue
+                    }
+                }
+                while let Some(x) = iterator_core.next() {
+                    let fin_mark =
+                        match x.find(":") {
+                            Some(fin_mark_index) => fin_mark_index,
+                            None => continue,
+                        };
+                    let admin_name_to_add = &x[1..fin_mark];
+                    if admin_name_to_add !=  &self.sender_name{
+                        liste_to_ping += admin_name_to_add;
+                        liste_to_ping += ", ";
+                    }else{
+                        continue
+                    }
                 }
                 let chat_to_ping = format!("Hello les adminsys: {} vous contacte ! {}", &self.sender_name, &liste_to_ping[0..liste_to_ping.len()-2]);
                 Ok(chat_to_ping)
@@ -96,10 +113,35 @@ impl Message{
                             Some(fin_mark_index) => fin_mark_index,
                             None => continue,
                         };
-                    liste_to_ping += &x[..fin_mark];
-                    liste_to_ping += ", ";
+                    let admin_name_to_add = &x[1..fin_mark];
+                    if admin_name_to_add !=  &self.sender_name{
+                        liste_to_ping += admin_name_to_add;
+                        liste_to_ping += ", ";
+                    }else{
+                        continue
+                    }
                 }
                 let chat_to_ping = format!("Hello les adminsys: {} vous contacte ! {}", &self.sender_name, &liste_to_ping[0..liste_to_ping.len()-2]);
+                Ok(chat_to_ping)
+            } else if botbot_phrase.contains("!alert") || botbot_phrase.contains("!alerte") {
+                let mut iterator_core = admincore_list.iter();
+                let mut liste_to_ping = String::from("ping: ");
+                while let Some(x) = iterator_core.next() {
+                    let fin_mark =
+                        match x.find(":") {
+                            Some(fin_mark_index) => fin_mark_index,
+                            None => continue,
+                        };
+                    let admin_name_to_add = &x[1..fin_mark];
+                    if admin_name_to_add !=  &self.sender_name{
+                        liste_to_ping += admin_name_to_add;
+                        liste_to_ping += ", ";
+                    }else{
+                        continue
+                    }
+                }
+                &self.change_room("!sjkTrbbOksVnLWuzlc:matrix.fdn.fr".to_string(), "fdn-adminsys".to_string());
+                let chat_to_ping = format!("ALERTE remontée par {} ! {}", &self.sender_name, &liste_to_ping[0..liste_to_ping.len()-2]);
                 Ok(chat_to_ping)
             } else {
                 // _réponse de botbot
@@ -112,7 +154,7 @@ impl Message{
                             let answer_with_new_line = &answer_with_name[..].replace("%n", "\n");
                             Ok(answer_with_new_line.to_string())
                         }
-                        Err(e) => Err(format!("ERROR: return answer {}",  e)),
+                        Err(e) => Err(format!("ERROR: chat answer {}",  e)),
                     };
                 chat_answer
             };
@@ -142,5 +184,9 @@ impl Message{
                 Err(e) => Err(format!("ERROR: sending message - {}", e)),
             };
         talking_status
+    }
+    pub fn change_room(&mut self, new_room_id: String, new_room_origin: String) {
+        self.room_id = new_room_id;
+        self.room_origin = new_room_origin;
     }
 }
