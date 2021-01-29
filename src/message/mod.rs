@@ -25,7 +25,6 @@ impl Message{
         let mut botbot_phrase = String::from(unidecode(&self.m_message).to_string());
         // _uppercases
         botbot_phrase.make_ascii_lowercase();
-        // _mode admin
         let answer =
             if botbot_phrase.contains("botbot admin") && adminsys_list.contains(&self.sender_id) {
                 let admin_answer =
@@ -70,6 +69,7 @@ impl Message{
                         Err("ERROR: no admin command".to_string())
                     };
                 admin_answer
+            // _ping équipe admincore + adminsys
             } else if botbot_phrase.contains("ping adminsys") {
                 let mut iterator_sys = adminsys_list.iter();
                 let mut iterator_core = admincore_list.iter();
@@ -104,6 +104,7 @@ impl Message{
                 }
                 let chat_to_ping = format!("Hello les adminsys: {} vous contacte ! {}", &self.sender_name, &liste_to_ping[0..liste_to_ping.len()-2]);
                 Ok(chat_to_ping)
+            // _ping equipe admincore
             } else if botbot_phrase.contains("ping admincore") {
                 let mut iterator = admincore_list.iter();
                 let mut liste_to_ping = String::from("ping: ");
@@ -123,6 +124,7 @@ impl Message{
                 }
                 let chat_to_ping = format!("Hello les adminsys: {} vous contacte ! {}", &self.sender_name, &liste_to_ping[0..liste_to_ping.len()-2]);
                 Ok(chat_to_ping)
+            // _envoie une alerte sur #adminsys
             } else if botbot_phrase.contains("!alert") || botbot_phrase.contains("!alerte") {
                 let mut iterator_core = admincore_list.iter();
                 let mut liste_to_ping = String::from("ping: ");
@@ -140,6 +142,7 @@ impl Message{
                         continue
                     }
                 }
+                // _on change le message pour que la réponse parte sur le chan adminsys
                 &self.change_room("!sjkTrbbOksVnLWuzlc:matrix.fdn.fr".to_string(), "fdn-adminsys".to_string());
                 let chat_to_ping = format!("ALERTE remontée par {} ! {}", &self.sender_name, &liste_to_ping[0..liste_to_ping.len()-2]);
                 Ok(chat_to_ping)
