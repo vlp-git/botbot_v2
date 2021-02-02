@@ -54,21 +54,25 @@ pub fn init_db () -> (Result<Connection, String>, Vec<String>, Vec<String>, Vec<
     }
     {
         // _charge dans adminsys_listet admincore_list tous les admins de la table admin
-        let mut add_admin_statement =
-            match connection_db.prepare("SELECT * FROM admin") {
-                Ok(add_admin_statement_ctrl) => add_admin_statement_ctrl,
-                Err(_e) => return (Err("Fail to load admin list from db".to_string()), trigger_word_list, adminsys_list, admicore_list),
+        let mut add_adminsys_statement =
+            match connection_db.prepare("SELECT * FROM admin WHERE power=TRUE") {
+                Ok(add_adminsys_statement_ctrl) => add_adminsys_statement_ctrl,
+                Err(_e) => return (Err("Fail to load adminsys list from db".to_string()), trigger_word_list, adminsys_list, admicore_list),
               };
-          while let State::Row = add_admin_statement.next().unwrap() {
-                  let admin_to_add = add_admin_statement.read::<String>(1).unwrap();
-                  let power_admin_to_add = add_admin_statement.read::<String>(2).unwrap();
-                  if power_admin_to_add == "TRUE" {
-                      admicore_list.push(admin_to_add);
-                      //adminsys_list.push(&admin_to_add);
-                  } else{
-                      adminsys_list.push(admin_to_add);
-                  }
+          while let State::Row = add_adminsys_statement.next().unwrap() {
+                  let admin_to_add = add_adminsys_statement.read::<String>(1).unwrap();
+                  admicore_list.push(admin_to_add);
               }
+
+          let mut add_admincore_statement =
+              match connection_db.prepare("SELECT * FROM admin") {
+                  Ok(add_admincore_statement_ctrl) => add_admincore_statement_ctrl,
+                  Err(_e) => return (Err("Fail to load admincore list from db".to_string()), trigger_word_list, adminsys_list, admicore_list),
+                };
+            while let State::Row = add_admincore_statement.next().unwrap() {
+                    let admin_to_add = add_admincore_statement.read::<String>(1).unwrap();
+                    adminsys_list.push(admin_to_add);
+                }
     }
     (Ok(connection_db), trigger_word_list, adminsys_list, admicore_list)
 }
