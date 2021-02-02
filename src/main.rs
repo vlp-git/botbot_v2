@@ -117,7 +117,11 @@ fn main() {
                     continue;
                 }
             };
-        println!("DEBUG: {}", line_from_buffer);
+            
+        // _DEBUG: SHOW RAW DATA:
+        // println!("DEBUG: {}", line_from_buffer);
+        // _DEBUG
+
         // _split la ligne de buffer selon le char "|" cf: https://github.com/8go/matrix-commander
         let raw_data: Vec<&str> = line_from_buffer.split('|').collect();
         // _check que la trame a bien 5 partie cf: https://github.com/8go/matrix-commander

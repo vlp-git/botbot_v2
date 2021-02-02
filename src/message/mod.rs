@@ -26,6 +26,7 @@ impl Message{
         let mut botbot_phrase = String::from(unidecode(&self.m_message).to_string());
         // _uppercases
         botbot_phrase.make_ascii_lowercase();
+        println!("DEBUG: {:?}", adminsys_list);
         let answer =
             if botbot_phrase.contains("botbot admin") && adminsys_list.contains(&self.sender_id){
                 let admin_answer =
@@ -67,7 +68,7 @@ impl Message{
                             };
                         chat_to_del
                     } else if botbot_phrase.contains("admin space") {
-                        Ok(format!("Disk usage: {}%", monit_disk_space("LUKS".to_string()).unwrap()))
+                        Ok(format!("Disk usage: {}%", monit_disk_space("/dev/vdb".to_string()).unwrap()))
                     } else {
                         Err("ERROR: no admin command".to_string())
                     };

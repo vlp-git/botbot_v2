@@ -64,6 +64,7 @@ pub fn init_db () -> (Result<Connection, String>, Vec<String>, Vec<String>, Vec<
                   let power_admin_to_add = add_admin_statement.read::<String>(2).unwrap();
                   if power_admin_to_add == "TRUE" {
                       admicore_list.push(admin_to_add);
+                      //adminsys_list.push(&admin_to_add);
                   } else{
                       adminsys_list.push(admin_to_add);
                   }
