@@ -31,7 +31,7 @@ impl Message{
         //println!("DEBUG: {:?}", adminsys_list);
         //println!("DEBUG: {:?}", admincore_list);
         // _DEBUG
-        
+
         let answer =
             if botbot_phrase.contains("botbot admin") && adminsys_list.contains(&self.sender_id){
                 let admin_answer =
@@ -81,23 +81,8 @@ impl Message{
             // _ping équipe admincore + adminsys
             } else if botbot_phrase.contains("ping adminsys") {
                 let mut iterator_sys = adminsys_list.iter();
-                let mut iterator_core = admincore_list.iter();
                 let mut liste_to_ping = String::from("ping: ");
                 while let Some(x) = iterator_sys.next() {
-                    let fin_mark =
-                        match x.find(":") {
-                            Some(fin_mark_index) => fin_mark_index,
-                            None => continue,
-                        };
-                    let admin_name_to_add = &x[1..fin_mark];
-                    if admin_name_to_add !=  &self.sender_name{
-                        liste_to_ping += admin_name_to_add;
-                        liste_to_ping += ", ";
-                    }else{
-                        continue
-                    }
-                }
-                while let Some(x) = iterator_core.next() {
                     let fin_mark =
                         match x.find(":") {
                             Some(fin_mark_index) => fin_mark_index,
