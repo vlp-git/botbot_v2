@@ -67,7 +67,7 @@ impl Message{
                             };
                         chat_to_del
                     } else if botbot_phrase.contains("admin space") {
-                        Ok(monit_disk_space())
+                        Ok(format!("Disk usage: {}%", monit_disk_space("/dev/vdb".to_string()).unwrap()))
                     } else {
                         Err("ERROR: no admin command".to_string())
                     };
