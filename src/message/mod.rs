@@ -27,7 +27,7 @@ impl Message{
         // _uppercases
         botbot_phrase.make_ascii_lowercase();
         let answer =
-            if botbot_phrase.contains("botbot admin") && adminsys_list.contains(&self.sender_id) {
+            if botbot_phrase.contains("botbot admin") {
                 let admin_answer =
                     // _mode admin pour ajout de trigger
                     if botbot_phrase.contains("admin add") {
