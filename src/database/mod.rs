@@ -55,7 +55,7 @@ pub fn init_db () -> (Result<Connection, String>, Vec<String>, Vec<String>, Vec<
     {
         // _charge dans adminsys_listet admincore_list tous les admins de la table admin
         let mut add_adminsys_statement =
-            match connection_db.prepare("SELECT * FROM admin WHERE power=TRUE") {
+            match connection_db.prepare("SELECT * FROM admin WHERE power='TRUE'") {
                 Ok(add_adminsys_statement_ctrl) => add_adminsys_statement_ctrl,
                 Err(_e) => return (Err("Fail to load adminsys list from db".to_string()), trigger_word_list, adminsys_list, admicore_list),
               };
