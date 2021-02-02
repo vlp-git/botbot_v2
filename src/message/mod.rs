@@ -4,6 +4,7 @@ use std::process::{Command, Child};
 use crate::database::{get_answer, add_chat, del_chat};
 mod message_mgmt;
 pub use message_mgmt::*;
+use crate::my_system::*;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  Structure et traits des messages reçus
@@ -65,6 +66,8 @@ impl Message{
                                 Err(e) => Err(format!("ERROR: chat_to_del match trigger {}", e)),
                             };
                         chat_to_del
+                    } else if botbot_phrase.contains("admin space") {
+                        Ok(monit_disk_space())
                     } else {
                         Err("ERROR: no admin command".to_string())
                     };
