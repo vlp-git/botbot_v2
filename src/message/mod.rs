@@ -80,74 +80,37 @@ impl Message{
                 admin_answer
             // _ping équipe admincore + adminsys
             } else if botbot_phrase.contains("ping adminsys") {
-                let mut iterator_sys = adminsys_list.iter();
-                let mut liste_to_ping = String::from("ping: ");
-                while let Some(x) = iterator_sys.next() {
-                    let fin_mark =
-                        match x.find(":") {
-                            Some(fin_mark_index) => fin_mark_index,
-                            None => continue,
-                        };
-                    let admin_name_to_add = &x[1..fin_mark];
-                    if admin_name_to_add !=  &self.sender_name{
-                        liste_to_ping += admin_name_to_add;
-                        liste_to_ping += ", ";
-                    }else{
-                        continue
-                    }
-                }
-                let chat_to_ping = format!("Hello les adminsys: {} vous contacte ! {}", &self.sender_name, &liste_to_ping[0..liste_to_ping.len()-2]);
-                Ok(chat_to_ping)
+                let chat_to_ping_adminsys=
+                    match get_admin_list(&self.sender_name, adminsys_list) {
+                        Ok(chat_to_ping_adminsys_ctrl) => Ok(format!("Hello les adminsys: {} vous contacte ! {}", &self.sender_name, chat_to_ping_adminsys_ctrl)),
+                        Err(e) => return Err(format!("ERROR: unable to get adminsys list {}", e)),
+                    };
+                chat_to_ping_adminsys
             // _ping equipe admincore
             } else if botbot_phrase.contains("ping admincore") {
-                let mut iterator = admincore_list.iter();
-                let mut liste_to_ping = String::from("ping: ");
-                while let Some(x) = iterator.next() {
-                    let fin_mark =
-                        match x.find(":") {
-                            Some(fin_mark_index) => fin_mark_index,
-                            None => continue,
-                        };
-                    let admin_name_to_add = &x[1..fin_mark];
-                    if admin_name_to_add !=  &self.sender_name{
-                        liste_to_ping += admin_name_to_add;
-                        liste_to_ping += ", ";
-                    }else{
-                        continue
-                    }
-                }
-                let chat_to_ping = format!("Hello les admincore: {} vous contacte ! {}", &self.sender_name, &liste_to_ping[0..liste_to_ping.len()-2]);
-                Ok(chat_to_ping)
+                let chat_to_ping_admincore=
+                    match get_admin_list(&self.sender_name, admincore_list) {
+                        Ok(chat_to_ping_admincore_ctrl) => Ok(format!("Hello les admincore: {} vous contacte ! {}", &self.sender_name, chat_to_ping_admincore_ctrl)),
+                        Err(e) => return Err(format!("ERROR: unable to get admincore list {}", e)),
+                    };
+                chat_to_ping_admincore
             // _envoie une alerte sur #adminsys
             } else if botbot_phrase.contains("!alert") || botbot_phrase.contains("!alerte") {
-                let mut iterator_core = admincore_list.iter();
-                let mut liste_to_ping = String::from("ping: ");
-                while let Some(x) = iterator_core.next() {
-                    let fin_mark =
-                        match x.find(":") {
-                            Some(fin_mark_index) => fin_mark_index,
-                            None => continue,
-                        };
-                    let admin_name_to_add = &x[1..fin_mark];
-                    if admin_name_to_add !=  &self.sender_name{
-                        liste_to_ping += admin_name_to_add;
-                        liste_to_ping += ", ";
-                    }else{
-                        continue
-                    }
-                }
                 // _on change le message pour que la réponse parte sur le chan adminsys
                 &self.change_room("!sjkTrbbOksVnLWuzlc:matrix.fdn.fr".to_string(), "fdn-adminsys".to_string());
-                let chat_to_ping = format!("ALERTE remontée par {} ! {}", &self.sender_name, &liste_to_ping[0..liste_to_ping.len()-2]);
-                Ok(chat_to_ping)
+                let chat_to_alert_admincore=
+                    match get_admin_list(&self.sender_name, admincore_list) {
+                        Ok(chat_to_ping_admincore_ctrl) => Ok(format!("ALERTE remontée par {} ! {}", &self.sender_name, chat_to_ping_admincore_ctrl)),
+                        Err(e) => return Err(format!("ERROR: unable to get admincore list {}", e)),
+                    };
+                chat_to_alert_admincore
             } else {
                 // _réponse de botbot
                 let chat_answer =
                     match get_answer(botbot_phrase, connection_db, trigger_word_list){
                         Ok(answer_ctrl) => {
-                            // _remplace les %s par le nom du sender
+                            // _remplace les %s par le nom du sender et les %n par un retour à la ligne
                             let answer_with_name= &answer_ctrl[..].replace("%s", &self.sender_name);
-                            // _remplace les %n par un retour à la ligne
                             let answer_with_new_line = &answer_with_name[..].replace("%n", "\n");
                             Ok(answer_with_new_line.to_string())
                         }
@@ -182,6 +145,8 @@ impl Message{
             };
         talking_status
     }
+
+    // _change la room de la réponse
     pub fn change_room(&mut self, new_room_id: String, new_room_origin: String) {
         self.room_id = new_room_id;
         self.room_origin = new_room_origin;
