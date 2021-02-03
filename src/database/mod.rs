@@ -2,6 +2,8 @@ use std::vec::*;
 use sqlite::{Connection, State};
 use rand::Rng;
 use regex::Regex;
+pub use database_mgmt::*;
+pub mod database_mgmt;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  FONCTION initialisation de la db
@@ -81,7 +83,20 @@ pub fn init_db () -> (Result<Connection, String>, Vec<String>, Vec<String>, Vec<
 ////////////////////////  FONCTION d'échange avec la db
 
 // _ajoute un trigger/answer dans la base
-pub fn add_chat(trigger: String, answer: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<String, String> {
+pub fn add_chat(choice: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<String, String> {
+
+    let trigger =
+        match get_left_arg(&choice) {
+             Ok(trigger_ctrl) => trigger_ctrl,
+             Err(e) => return Err(format!("ERROR: chat_to_add match trigger {}", e)),
+        };
+
+    let answer =
+        match get_right_arg(&choice) {
+             Ok(answer_ctrl) => answer_ctrl,
+             Err(e) => return Err(format!("ERROR: chat_to_add match answer {}", e)),
+        };
+
     let mut insert_statement =
         match connection_db.prepare("INSERT INTO talking (trigger, answer) VALUES (?, ?);"){
             Ok(insert_statement_ctrl) => insert_statement_ctrl,
@@ -109,7 +124,14 @@ pub fn add_chat(trigger: String, answer: String, connection_db: &Connection, tri
 }
 
 // _supprime un trigger/answer dans la base
-pub fn del_chat(trigger: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<String, String> {
+pub fn del_chat(choice: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<String, String> {
+
+    let trigger =
+        match get_left_arg(&choice) {
+             Ok(trigger_ctrl) => trigger_ctrl,
+             Err(e) => return Err(format!("ERROR: chat_to_del match trigger {}", e)),
+        };
+
     if !trigger_word_list.contains(&trigger) {
         return Err(format!("ERROR: trigger not in db"))
     }

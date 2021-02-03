@@ -22,7 +22,6 @@ pub struct Message{
 impl Message{
     // _détermine les actions de botbot lorsqu'il est déclenché
     pub fn thinking(&mut self, adminsys_list: &Vec<String>, admincore_list: &Vec<String>, trigger_word_list: &mut Vec<String>, connection_db: &Connection) -> Result<String, String> {
-        let choice = String::from(unidecode(&self.m_message).to_string());
         let mut botbot_phrase = String::from(unidecode(&self.m_message).to_string());
         // _uppercases
         botbot_phrase.make_ascii_lowercase();
@@ -32,38 +31,17 @@ impl Message{
                     // _mode admin pour ajout de trigger
                     if botbot_phrase.contains("admin add") {
                         let chat_to_add =
-                              match get_left_arg(&choice) {
-                                  Ok(trigger_to_add_ctrl) => {
-                                      let answer_to_add =
-                                              match get_right_arg(&choice) {
-                                                  Ok(answer_to_add_ctrl) => {
-                                                      let process_to_add =
-                                                          match add_chat(trigger_to_add_ctrl, answer_to_add_ctrl, connection_db, trigger_word_list) {
-                                                              Ok(chat_to_add_ctrl) => Ok(format!("[admin mode by: {}] {} ajouté !", &self.sender_name, chat_to_add_ctrl)),
-                                                              Err(e) => Err(format!("ERROR: chat_to_add process to add {}", e)),
-                                                          };
-                                                      process_to_add
-                                                  }
-                                                  Err(e) => Err(format!("ERROR: chat_to_add get answer {}", e)),
-                                              };
-                                      answer_to_add
-                                  }
-                                  Err(e) => Err(format!("ERROR: chat_to_add get trigger {}", e)),
-                              };
+                            match add_chat(botbot_phrase, connection_db, trigger_word_list) {
+                                Ok(chat_to_add_ctrl) => Ok(format!("[admin mode by: {}] {} ajouté !", &self.sender_name, chat_to_add_ctrl)),
+                                Err(e) => Err(format!("ERROR: chat_to_add process to add {}", e)),
+                            };
                         chat_to_add
                     // _mode admin pour suppression de trigger
                     } else if botbot_phrase.contains("admin del") {
                         let chat_to_del =
-                            match get_left_arg(&choice) {
-                                Ok(trigger_to_del_ctrl) => {
-                                    let proceed_to_del =
-                                        match del_chat(trigger_to_del_ctrl, connection_db, trigger_word_list) {
-                                            Ok(_chat_to_del_ctrl) => Ok(format!("[admin mode by: {}] {} supprimé !", &self.sender_name, _chat_to_del_ctrl)),
-                                            Err(e) => Err(format!("ERROR: chat_to_del proceed to del {}", e)),
-                                        };
-                                        proceed_to_del
-                                }
-                                Err(e) => Err(format!("ERROR: chat_to_del match trigger {}", e)),
+                            match del_chat(botbot_phrase, connection_db, trigger_word_list) {
+                                Ok(del_chat_ctrl) => Ok(format!("[admin mode by: {}] {} supprimé !", &self.sender_name, del_chat_ctrl)),
+                                Err(e) => Err(format!("ERROR: chat_to_del proceed to del {}", e)),
                             };
                         chat_to_del
                     // _mode admin pour afficher l'espace restant dans /var
