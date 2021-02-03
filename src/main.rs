@@ -39,7 +39,7 @@ fn main() {
                 connection_db_ctrl
             }
             Err(e) => {
-                println!("!!! Database initialization failed: {}", e);
+                println!("Error: Database initialization failed: {}", e);
                 return
             }
         };
@@ -52,7 +52,7 @@ fn main() {
         match matrix_commander_daemon_launch() {
             Ok(matrix_commander_ctrl) => matrix_commander_ctrl,
             Err(e) => {
-                println!("!!! Fail to lauch matrix-commander: {}", e);
+                println!("Error: Fail to launch matrix-commander: {}", e);
                 return
             }
         };
@@ -66,7 +66,7 @@ fn main() {
                 matrix_pid_ctrl
             }
             Err(e) => {
-                println!("!!! fail to get matrix-commander pid: {}", e);
+                println!("Error: fail to get matrix-commander pid: {}", e);
                 return
             }
         };
@@ -77,7 +77,7 @@ fn main() {
         match matrix_commander.stdout.as_mut(){
             Some(matrix_commander_raw_buffer) => matrix_commander_raw_buffer,
             None => {
-                println!("!!! fail to attach buffer");
+                println!("Error: fail to attach buffer");
                 return
             }
         };
@@ -94,7 +94,7 @@ fn main() {
         match Regex::new(&ticket_to_search_re){
             Ok(ticket_re_ctrl) => ticket_re_ctrl,
             Err(_e) => {
-                println!("!!! fail to build ticket regex");
+                println!("Error: fail to build ticket regex");
                 return
             }
         };

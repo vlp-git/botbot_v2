@@ -158,7 +158,7 @@ pub fn del_chat(choice: String, connection_db: &Connection, trigger_word_list: &
 pub fn get_answer(choice: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<String, String> {
     let mut tmp_answers: Vec<String> = Vec::new();
     for x in trigger_word_list {
-        let re_to_search = format!("(\\s{}|^{})[\\s\\?!,]*", x, x);
+        let re_to_search = format!("(\\s{}|^{}|'{})[\\s\\?!,]*", x, x, x);
         let re =
             match Regex::new(&re_to_search){
                 Ok(re_ctrl) => re_ctrl,
