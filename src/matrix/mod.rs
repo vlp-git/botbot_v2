@@ -8,9 +8,9 @@ pub mod matrix_mgmt;
 
 // _initialise le daemon matrix-commander
 pub fn matrix_commander_daemon_launch() -> Result<Child, Error> {
-    let daemon = Command::new("./../matrix-commander/matrix-commander.py")
-        .arg("-c./../matrix-commander/credentials.json")
-        .arg("-s./../matrix-commander/store/")
+    let daemon = Command::new(crate::MATRIX_FOLDER)
+        .arg(crate::MATRIX_CREDITENTIALS)
+        .arg(crate::MATRIX_DB_FOLDER)
         .arg("-lforever")
         .stdout(Stdio::piped())
         .spawn();

@@ -112,9 +112,9 @@ impl Message{
         let mut room = "-r".to_string();
         room.push_str(&self.room_id);
         let talking_status =
-            match Command::new("./../matrix-commander/matrix-commander.py")
-            .arg("-c./../matrix-commander/credentials.json")
-            .arg("-s./..//matrix-commander/store/")
+            match Command::new(crate::MATRIX_FOLDER)
+            .arg(crate::MATRIX_CREDITENTIALS)
+            .arg(crate::MATRIX_DB_FOLDER)
             .arg(room)
             .arg(blabla)
             .spawn() {

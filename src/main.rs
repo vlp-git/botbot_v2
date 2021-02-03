@@ -11,6 +11,9 @@ mod matrix;
 use crate::matrix::*;
 mod my_system;
 
+const MATRIX_FOLDER: &str = "./../matrix-commander/matrix-commander.py";
+const MATRIX_CREDITENTIALS: &str = "-c./../matrix-commander/credentials.json";
+const MATRIX_DB_FOLDER: &str = "s./../matrix-commander/store/";
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  FONCTION principale
 
