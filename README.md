@@ -14,7 +14,7 @@
 ## How-to
 botbot permet de répondre aux questions qu'on lui pose en détectant des "triggers". Ces mots vont déclencher des réponses pré-enregistrées. Certains des réponses sont utiles et pertinentes, d'autres moins :p
 
-### Exemples commandes utiles
+### Commandes utiles
 * "botbot help"
 * "botbot quelles sont les dernières news ?
 * "botbot j'ai un problème, qui dois-je contacter ?"

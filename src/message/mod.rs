@@ -47,7 +47,7 @@ impl Message{
                     // _mode admin pour afficher l'espace restant dans /var
                     } else if botbot_phrase.contains("admin space") {
                         let chat_to_space_left=
-                            match monit_disk_space("/dev/vdb".to_string()) {
+                            match monit_disk_space(crate::MATRIX_DRIVE.to_string()) {
                                 Ok(chat_to_space_left_ctrl) => Ok(format!("Disk usage: {}%", chat_to_space_left_ctrl)),
                                 Err(e) => Err(format!("ERROR: unable to get disk usage {}", e)),
                             };
