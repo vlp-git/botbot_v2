@@ -13,20 +13,23 @@
 ## How-to
 botbot permet de répondre aux questions qu'on lui pose en détectant des "triggers". Ces mots vont déclencher des réponses pré-enregistrées. Certains des réponses sont utiles et pertinentes, d'autres moins :p
 
-### exemples commandes utiles
+### Exemples commandes utiles
 * "botbot help"
 * "botbot quelles sont les dernière news ?""
 * "botbot j'ai un problème, qui dois-je contacter" ?
 * "botbot j'ai une question sur les modems"
 * ...
 
-### commandes speciales
+### Commandes speciales
 * "botbot sos" > affiche les infos en cas de problème sur le réseau fdn
 * "botbot !alert" > contact les admincore, à utiliser si vous détecter un problème
 * "botbot ping adminsys" > ping tous les adminsys
 * "botbot ping admincore" > ping tous les admincore
 
-### pour les commandes inutiles, je vous laisse chercher !
-
+### Pour les commandes inutiles, je vous laisse chercher !
+☕🍸🍺
 
 ## Admin
+* "botbot admin add [trigger word] [answer]" > ajoute dans la db le mot trigger [trigger] et affichera la réponse [answer]
+* "botbot admin del [trigger word]" > supprime de la db le mot trigger [trigger] et sa réponse
+* "botbot admin space" > affiche l'espace disque disponible sur /var de la VM qui fait tourner matrix
