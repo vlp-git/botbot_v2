@@ -16,7 +16,7 @@ botbot permet de répondre aux questions qu'on lui pose en détectant des "trigg
 
 ### Exemples commandes utiles
 * "botbot help"
-* "botbot quelles sont les dernière news ?
+* "botbot quelles sont les dernières news ?
 * "botbot j'ai un problème, qui dois-je contacter ?"
 * "botbot j'ai une question sur les modems ?"
 * ...
