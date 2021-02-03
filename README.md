@@ -1,4 +1,5 @@
 # [botbot]
+***Disclaimer: ceci est un projet perso dans le but de découvrir le langage Rust, tout conseil sera donc très apprécié !***
 * bot dédié à accompagner les personnes connecté sur les chan IRC/matrix d'fdn
 * Il permet aussi des actions basiques d'interraction pour les admins
 
