@@ -16,3 +16,18 @@ pub fn matrix_commander_daemon_launch() -> Result<Child, Error> {
         .spawn();
     daemon
 }
+
+// _envoie un message
+pub fn matrix_commander_message_send(room: String, blabla: String) -> Result<Child, String> {
+    let message_to_send =
+        match Command::new(crate::MATRIX_FOLDER)
+        .arg(crate::MATRIX_CREDITENTIALS)
+        .arg(crate::MATRIX_DB_FOLDER)
+        .arg(room)
+        .arg(blabla)
+        .spawn() {
+            Ok(talking_status_ctrl) => Ok(talking_status_ctrl),
+            Err(e) => Err(format!("ERROR: sending message - {}", e)),
+        };
+    message_to_send
+}

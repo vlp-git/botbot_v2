@@ -1,10 +1,11 @@
 use unidecode::unidecode;
 use sqlite::Connection;
-use std::process::{Command, Child};
+use std::process::Child;
 use crate::database::{get_answer, add_chat, del_chat};
 mod message_mgmt;
 pub use message_mgmt::*;
 use crate::my_system::*;
+use crate::matrix::*;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  Structure et traits des messages reçus
@@ -112,14 +113,9 @@ impl Message{
         let mut room = "-r".to_string();
         room.push_str(&self.room_id);
         let talking_status =
-            match Command::new(crate::MATRIX_FOLDER)
-            .arg(crate::MATRIX_CREDITENTIALS)
-            .arg(crate::MATRIX_DB_FOLDER)
-            .arg(room)
-            .arg(blabla)
-            .spawn() {
-                Ok(talking_status_ctrl) => Ok(talking_status_ctrl),
-                Err(e) => Err(format!("ERROR: sending message - {}", e)),
+            match matrix_commander_message_send(room, blabla){
+                    Ok(talking_status_ctrl) => Ok(talking_status_ctrl),
+                    Err(e) => Err(format!("ERROR: sending message - {}", e)),
             };
         talking_status
     }
