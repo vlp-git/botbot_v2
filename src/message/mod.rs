@@ -26,12 +26,6 @@ impl Message{
         let mut botbot_phrase = String::from(unidecode(&self.m_message).to_string());
         // _uppercases
         botbot_phrase.make_ascii_lowercase();
-
-        // _DEBUG: SHOW admin lists:
-        //println!("DEBUG: {:?}", adminsys_list);
-        //println!("DEBUG: {:?}", admincore_list);
-        // _DEBUG
-
         let answer =
             if botbot_phrase.contains("botbot admin") && adminsys_list.contains(&self.sender_id){
                 let admin_answer =
@@ -72,8 +66,14 @@ impl Message{
                                 Err(e) => Err(format!("ERROR: chat_to_del match trigger {}", e)),
                             };
                         chat_to_del
+                    // _mode admin pour afficher l'espace restant dans /var
                     } else if botbot_phrase.contains("admin space") {
-                        Ok(format!("Disk usage: {}%", monit_disk_space("/dev/vdb".to_string()).unwrap()))
+                        let chat_to_space_left=
+                            match monit_disk_space("/dev/vdb".to_string()) {
+                                Ok(chat_to_space_left_ctrl) => Ok(format!("Disk usage: {}%", chat_to_space_left_ctrl)),
+                                Err(e) => Err(format!("ERROR: unable to get disk usage {}", e)),
+                            };
+                        chat_to_space_left
                     } else {
                         Err("ERROR: no admin command".to_string())
                     };
@@ -116,7 +116,7 @@ impl Message{
                         continue
                     }
                 }
-                let chat_to_ping = format!("Hello les adminsys: {} vous contacte ! {}", &self.sender_name, &liste_to_ping[0..liste_to_ping.len()-2]);
+                let chat_to_ping = format!("Hello les admincore: {} vous contacte ! {}", &self.sender_name, &liste_to_ping[0..liste_to_ping.len()-2]);
                 Ok(chat_to_ping)
             // _envoie une alerte sur #adminsys
             } else if botbot_phrase.contains("!alert") || botbot_phrase.contains("!alerte") {

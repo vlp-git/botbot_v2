@@ -1,6 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  botbot v2 by vlp
-
 use std::io::{BufRead, BufReader};
 use procfs::process::Process;
 use regex::Regex;
@@ -117,7 +116,7 @@ fn main() {
                     continue;
                 }
             };
-            
+
         // _DEBUG: SHOW RAW DATA:
         // println!("DEBUG: {}", line_from_buffer);
         // _DEBUG

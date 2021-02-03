@@ -9,6 +9,7 @@ pub fn monit_disk_space(disk: String) -> Result<i32, String> {
 
     let mut disk_status: Vec<&str> = Vec::new();
 
+    // _lance la commande df
     let space_left_command = Command::new("df")
         .output()
         .expect("failed to execute process");
@@ -17,6 +18,7 @@ pub fn monit_disk_space(disk: String) -> Result<i32, String> {
 
     let disk_list: Vec<&str> = space_left.split('\n').collect();
 
+    // _construit le regex pour prendre la ligne de df contenant l'info passé en arg, ici /var
     let disk_re =
         match Regex::new(&disk){
             Ok(disk_re_ctrl) => disk_re_ctrl,
@@ -25,7 +27,7 @@ pub fn monit_disk_space(disk: String) -> Result<i32, String> {
             }
         };
 
-
+    // _ remplis un vecteur des infos de la lignes /var affiché par df
     for line in disk_list {
         if disk_re.is_match(&line){
             let data_list: Vec<&str> = line.split(' ').collect();
@@ -36,13 +38,21 @@ pub fn monit_disk_space(disk: String) -> Result<i32, String> {
             }
         }
     }
-    let raw_usage = disk_status[4];
-    let clean_usage = &raw_usage[..raw_usage.len()-1];
-    let usage =
-        match clean_usage.parse::<i32>(){
-            Ok(usage_ctrl) => Ok(usage_ctrl),
-            Err(_e) => Err("ERROR: convert usage in Integer".to_string()),
+
+    let disk_usage =
+        if disk_status.len() == 6 {
+            // _retourne le pourcentage au format i32
+            let raw_usage = disk_status[4];
+            let clean_usage = &raw_usage[..raw_usage.len()-1];
+            let usage =
+                match clean_usage.parse::<i32>(){
+                    Ok(usage_ctrl) => Ok(usage_ctrl),
+                    Err(_e) => Err("ERROR: convert disk usage in Integer".to_string()),
+                };
+            usage
+        } else {
+            Err("ERROR: fail to read disk usage".to_string())
         };
 
-    usage
+        disk_usage
 }
