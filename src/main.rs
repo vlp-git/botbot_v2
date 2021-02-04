@@ -120,16 +120,18 @@ fn main() {
             return;
         }
 
-        //_affiche un message chaques minutes
-        for datetime in schedule.upcoming(Local).take(1) {
-            let raw_date_now: DateTime<Local> = Local::now();
-            let date_now = raw_date_now.format("%Y-%m-%d %H:%M:%S").to_string();
-            let next_date = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
-            if  date_now ==  next_date {
-                println!("!ALIVE: {}", date_now);
-            }
-        }
+        ////////////////  OUTPUT in progress
+        // _affiche un message chaques minutes
+        // for datetime in schedule.upcoming(Local).take(1) {
+        //     let raw_date_now: DateTime<Local> = Local::now();
+        //     let date_now = raw_date_now.format("%Y-%m-%d %H:%M:%S").to_string();
+        //     let next_date = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
+        //     if  date_now ==  next_date {
+        //         println!("!ALIVE: {}", date_now);
+        //     }
+        // }
 
+        ////////////////  INTPUT
         // _lecture ligne à ligne du buffer
         let _buffer_control =
             match matrix_commander_ready_buffer.read_line(&mut line_from_buffer) {
