@@ -4,12 +4,18 @@ use std::io::{BufRead, BufReader};
 use procfs::process::Process;
 use regex::Regex;
 mod message;
-use crate::message::*;
 mod database;
 use crate::database::*;
 mod matrix;
 use crate::matrix::*;
+mod botbot_actions;
+use crate::botbot_actions::*;
 mod my_system;
+extern crate cron;
+use cron::Schedule;
+use chrono::DateTime;
+use chrono::prelude::*;
+use std::str::FromStr;
 
 const MATRIX_FOLDER: &str = "./../matrix-commander/matrix-commander.py";
 const MATRIX_CREDITENTIALS: &str = "-c./../matrix-commander/credentials.json";
@@ -20,7 +26,10 @@ const MATRIX_DRIVE: &str = "/dev/vdb";
 
 fn main() {
 
-    println!("///// botbot v2 by lovely fdn team");
+    let expression = "0   *   *   *   *   *   *";
+    let schedule = Schedule::from_str(expression).unwrap();
+
+    println!("///// botbot v2.1 by lovely fdn team");
 
     println!("[Database]");
 
@@ -90,7 +99,7 @@ fn main() {
 
     // _pré-construit le regex pour identifier les numéros de tickets
     let ticket_to_search_re = "#[0-9]{4,6}".to_string();
-    let ticket_re =
+    let ticket_regex =
         match Regex::new(&ticket_to_search_re){
             Ok(ticket_re_ctrl) => ticket_re_ctrl,
             Err(_e) => {
@@ -110,100 +119,30 @@ fn main() {
             println!("matrix-commander do not respond, the application will shutdown");
             return;
         }
+
+        //_affiche un message chaques minutes
+        for datetime in schedule.upcoming(Local).take(1) {
+            let raw_date_now: DateTime<Local> = Local::now();
+            let date_now = raw_date_now.format("%Y-%m-%d %H:%M:%S").to_string();
+            let next_date = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
+            if  date_now ==  next_date {
+                println!("!ALIVE: {}", date_now);
+            }
+        }
+
         // _lecture ligne à ligne du buffer
         let _buffer_control =
             match matrix_commander_ready_buffer.read_line(&mut line_from_buffer) {
-                Ok(_buffer_control_ctrl) => _buffer_control_ctrl,
+                Ok(buffer_control_ctrl) => {
+                    botbot_read(&line_from_buffer, &connection_db, &mut trigger_word_list, &adminsys_list, &admincore_list, &ticket_regex);
+                    line_from_buffer.clear();
+                    buffer_control_ctrl
+                }
                 Err(e) => {
                     println!("Unreadable line: {}", e);
                     line_from_buffer.clear();
                     continue;
                 }
             };
-
-        // _DEBUG: SHOW RAW DATA:
-        // println!("DEBUG: {}", line_from_buffer);
-        // _DEBUG
-
-        // _split la ligne de buffer selon le char "|" cf: https://github.com/8go/matrix-commander
-        let raw_data: Vec<&str> = line_from_buffer.split('|').collect();
-        // _check que la trame a bien 5 partie cf: https://github.com/8go/matrix-commander
-        if raw_data.len() == 4 {
-            // _on crée la variable raw_message qui est la dernière partie de la trame
-            // _on mets tout en lowercase + on retire les accents afin de maximiser les match dans la db
-            let mut raw_message = String::from(raw_data[3]);
-            raw_message.make_ascii_lowercase();
-            // _on ignore les trames qui commencent par '>' qui sont dans matrix la reprise d'un message auquel on répond
-            let raw_message_fist_char = raw_message.chars().nth(1).unwrap_or(' ');
-            if raw_message_fist_char !=  '>' {
-                // _controle et clean des 5 trames et création des 5 variables pour créer un objet Message
-                // _si error: vide buffer + sortie de loop
-                let (clean_room_id, clean_room, clean_sender_id, clean_sender_name, clean_message) =
-                    match clean_trame(raw_data){
-                        Ok(trame_ctrl) => {
-                            trame_ctrl
-                        }
-                        Err(_e) => {
-                            line_from_buffer.clear();
-                            continue
-                        },
-                    };
-                    // _création d'un Message
-                    let mut incoming_message = Message{room_origin: clean_room, room_id: clean_room_id, sender_id: clean_sender_id, sender_name: clean_sender_name, m_message: clean_message};
-                    // _retour de la réponse en fonction du global trigger (botbot || #ticket) dans raw_message via la methode .thinking
-                    let trigger_answer_result =
-                        if raw_message.contains("botbot") {
-                                let thinking_check =
-                                    match incoming_message.thinking(&adminsys_list, &admincore_list, &mut trigger_word_list, &connection_db){
-                                        Ok(answer_ctrl) => Ok(answer_ctrl),
-                                        Err(e) => Err(format!("Message from {}: {}", incoming_message.sender_name, e)),
-                                    };
-                                thinking_check
-                        } else if ticket_re.is_match(&raw_message)  && incoming_message.room_origin == "fdn-tickets-internal" {
-                                //_isole le numéro du ticket avec le regex
-                                let regex_capture = ticket_re.captures(&incoming_message.m_message).unwrap();
-                                let raw_ticket_number = match regex_capture.get(0) {
-                                    Some(raw_ticket_number_ctrl) => raw_ticket_number_ctrl.as_str(),
-                                    None => continue,
-                                };
-                                let ticket_number = raw_ticket_number.to_string();
-                                let ticket_check=
-                                match incoming_message.ticket(ticket_number){
-                                    Ok(answer_ctrl) => Ok(answer_ctrl),
-                                    Err(e) => Err(format!("ticket: {}", e)),
-                                };
-                                ticket_check
-                        } else {
-                                Err(format!("Message from {}: No global trigger found", incoming_message.sender_name))
-                        };
-                    // _controle du résultat de .thinking si ok affichage de la réponse en console
-                    // _si error: vide buffer + sortie de loop
-                    let trigger_answer =
-                        match trigger_answer_result {
-                            Ok(trigger_answer_result_ctrl) => {
-                                println!("Botbot Message from {}: {}", incoming_message.sender_name, trigger_answer_result_ctrl);
-                                trigger_answer_result_ctrl
-                            }
-                            Err(e) =>  {
-                                println!("Error: {}", e);
-                                line_from_buffer.clear();
-                                continue
-                            }
-                        };
-                    // _affichage de la réponse dans la room
-                    // _si error: vide buffer + sortie de loop
-                    let _talking_status =
-                        match incoming_message.talking(trigger_answer){
-                            Ok(talking_status_ctrl) => talking_status_ctrl.id(),
-                            Err(e) =>  {
-                                println!("Error: {}", e);
-                                line_from_buffer.clear();
-                                continue
-                            }
-                        };
-                }
-            }
-            // _vide le du buffer à chaque boucle
-            line_from_buffer.clear();
         }
 }

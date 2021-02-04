@@ -83,16 +83,16 @@ pub fn init_db () -> (Result<Connection, String>, Vec<String>, Vec<String>, Vec<
 ////////////////////////  FONCTION d'échange avec la db
 
 // _ajoute un trigger/answer dans la base
-pub fn add_chat(choice: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<String, String> {
+pub fn add_chat(botbot_phrase: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<String, String> {
 
     let trigger =
-        match get_left_arg(&choice) {
+        match get_left_arg(&botbot_phrase) {
              Ok(trigger_ctrl) => trigger_ctrl,
              Err(e) => return Err(format!("ERROR: chat_to_add match trigger {}", e)),
         };
 
     let answer =
-        match get_right_arg(&choice) {
+        match get_right_arg(&botbot_phrase) {
              Ok(answer_ctrl) => answer_ctrl,
              Err(e) => return Err(format!("ERROR: chat_to_add match answer {}", e)),
         };
@@ -124,10 +124,10 @@ pub fn add_chat(choice: String, connection_db: &Connection, trigger_word_list: &
 }
 
 // _supprime un trigger/answer dans la base
-pub fn del_chat(choice: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<String, String> {
+pub fn del_chat(botbot_phrase: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<String, String> {
 
     let trigger =
-        match get_left_arg(&choice) {
+        match get_left_arg(&botbot_phrase) {
              Ok(trigger_ctrl) => trigger_ctrl,
              Err(e) => return Err(format!("ERROR: chat_to_del match trigger {}", e)),
         };
@@ -155,7 +155,7 @@ pub fn del_chat(choice: String, connection_db: &Connection, trigger_word_list: &
 }
 
 // _récupère une answer dans la base à partir de son trigger
-pub fn get_answer(choice: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<String, String> {
+pub fn get_answer(botbot_phrase: String, connection_db: &Connection, trigger_word_list: &mut Vec<String>) -> Result<String, String> {
     let mut tmp_answers: Vec<String> = Vec::new();
     for x in trigger_word_list {
         let re_to_search = format!("(\\s{}|^{}|'{})[\\s\\?!,]*", x, x, x);
@@ -164,7 +164,7 @@ pub fn get_answer(choice: String, connection_db: &Connection, trigger_word_list:
                 Ok(re_ctrl) => re_ctrl,
                 Err(e) => return Err(format!("ERROR: setup regex {}", e)),
             };
-        if  re.is_match(&choice) {
+        if  re.is_match(&botbot_phrase) {
             let mut select_statement =
                 match connection_db.prepare("SELECT answer FROM talking where trigger=?"){
                     Ok(select_statement_ctrl) => select_statement_ctrl,
@@ -190,6 +190,6 @@ pub fn get_answer(choice: String, connection_db: &Connection, trigger_word_list:
         let mut rng = rand::thread_rng();
         Ok(tmp_answers[rng.gen_range(0..tmp_answers.len())].to_string())
     }else{
-        Err(format!("ERROR: no word found for: {}", choice))
+        Err(format!("ERROR: no word found for: {}", botbot_phrase))
     }
 }
