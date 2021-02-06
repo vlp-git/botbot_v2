@@ -1,22 +1,30 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  botbot v2 by vlp
-use std::io::{BufRead, BufReader};
-use procfs::process::Process;
-use regex::Regex;
+
+/// INTERNAL CRATES
 mod message;
 mod database;
-use crate::database::*;
+use crate::database::init_db;
 mod matrix;
-use crate::matrix::*;
+use crate::matrix::matrix_commander_daemon_launch;
 mod botbot_actions;
 use crate::botbot_actions::*;
 mod my_system;
-extern crate cron;
-use cron::Schedule;
-use chrono::DateTime;
-use chrono::prelude::*;
-use std::str::FromStr;
 
+
+/// EXTERNAL CRATES
+// extern crate cron;
+// use cron::Schedule;
+// use chrono::DateTime;
+// use chrono::prelude::*;
+// use std::str::FromStr;
+use std::thread;
+use std::time::Duration;
+use std::io::{BufRead, BufReader};
+use procfs::process::Process;
+use regex::Regex;
+
+// CONSTANTS
 const MATRIX_FOLDER: &str = "./../matrix-commander/matrix-commander.py";
 const MATRIX_CREDITENTIALS: &str = "-c./../matrix-commander/credentials.json";
 const MATRIX_DB_FOLDER: &str = "-s./../matrix-commander/store/";
@@ -26,8 +34,8 @@ const MATRIX_DRIVE: &str = "/dev/vdb";
 
 fn main() {
 
-    let expression = "0   *   *   *   *   *   *";
-    let schedule = Schedule::from_str(expression).unwrap();
+    // let expression = "0   *   *   *   *   *   *";
+    // let schedule = Schedule::from_str(expression).unwrap();
 
     println!("///// botbot v2.1 by lovely fdn team");
 
@@ -111,6 +119,15 @@ fn main() {
     println!("[botbot is running]");
 
     line_from_buffer.clear();
+
+    //////////////// test
+    thread::spawn(|| {
+        for i in 1..10 {
+            println!("hi number {} from the spawned thread!", i);
+            thread::sleep(Duration::from_millis(1000));
+        }
+    });
+    //////////////// test
 
     // _boucle global qui est bloquante à cause de read.line qui attend un '\n' pour avancer
     loop {
