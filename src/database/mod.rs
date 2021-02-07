@@ -135,23 +135,35 @@ pub fn del_chat(botbot_phrase: String, connection_db: &Connection, trigger_word_
     if !trigger_word_list.contains(&trigger) {
         return Err(format!("ERROR: trigger not in db"))
     }
-    let mut del_statement =
-        match connection_db.prepare("DELETE FROM talking WHERE trigger=?"){
-            Ok(del_statement_ctrl) => del_statement_ctrl,
-            Err(e) => return Err(format!("ERROR: del prepare db {}", e)),
-          };
-    let _bind_statement =
-      match del_statement.bind(1, &trigger[..]){
-          Ok(_bind_statement_ctrl) => _bind_statement_ctrl,
-          Err(e) => return Err(format!("ERROR: del binding trigger {}", e)),
-      };
-    let _run_statement =
-        match del_statement.next() {
-            Ok(_run_statement_ctrl) => _run_statement_ctrl,
-            Err(e) => return Err(format!("ERROR: process del trigger {}", e)),
+
+    let answer =
+        match get_right_arg(&botbot_phrase) {
+             Ok(answer_ctrl) => answer_ctrl,
+             Err(e) => return Err(format!("ERROR: chat_to_add match answer {}", e)),
         };
-    trigger_word_list.retain(|x| *x != trigger);
-    Ok(trigger)
+
+    if trigger == answer {
+        let mut del_statement =
+            match connection_db.prepare("DELETE FROM talking WHERE trigger=?"){
+                Ok(del_statement_ctrl) => del_statement_ctrl,
+                Err(e) => return Err(format!("ERROR: del prepare db {}", e)),
+              };
+        let _bind_statement =
+          match del_statement.bind(1, &trigger[..]){
+              Ok(_bind_statement_ctrl) => _bind_statement_ctrl,
+              Err(e) => return Err(format!("ERROR: del binding trigger {}", e)),
+          };
+        let _run_statement =
+            match del_statement.next() {
+                Ok(_run_statement_ctrl) => _run_statement_ctrl,
+                Err(e) => return Err(format!("ERROR: process del trigger {}", e)),
+            };
+        trigger_word_list.retain(|x| *x != trigger);
+        Ok(trigger)
+    }
+    else {
+        Ok("plop".to_string())
+    }
 }
 
 // _récupère une answer dans la base à partir de son trigger

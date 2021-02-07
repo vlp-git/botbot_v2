@@ -53,6 +53,10 @@ impl Message{
                                 Err(e) => Err(format!("ERROR: unable to get disk usage {}", e)),
                             };
                         chat_to_space_left
+                    } else if botbot_phrase.contains("admin annonce") {
+                        &self.change_room("!JHyLuasLCpiDxIlcks:matrix.fdn.fr".to_string(), "fdn".to_string());
+                        let chat_to_all= Ok(format!("ANNONCE: {}", &self.m_message));
+                        chat_to_all
                     } else {
                         Err("ERROR: no admin command".to_string())
                     };
