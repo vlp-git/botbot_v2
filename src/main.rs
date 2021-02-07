@@ -34,7 +34,7 @@ const MATRIX_DRIVE: &str = "/dev/vdb";
 
 fn main() {
 
-    // let expression = "0   *   *   *   *   *   *";
+    // let expression = "0   *   *   *   *   *   *"; 
     // let schedule = Schedule::from_str(expression).unwrap();
 
     println!("///// botbot v2.1 by lovely fdn team");
