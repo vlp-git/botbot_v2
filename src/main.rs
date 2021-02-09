@@ -25,16 +25,16 @@ use procfs::process::Process;
 use regex::Regex;
 
 // CONSTANTS
-const MATRIX_FOLDER: &str = "./../matrix-commander/matrix-commander.py";
-const MATRIX_CREDITENTIALS: &str = "-c./../matrix-commander/credentials.json";
-const MATRIX_DB_FOLDER: &str = "-s./../matrix-commander/store/";
+const MATRIX_FOLDER: &str = "/home/vlp/tools_git/matrix-commander/matrix-commander.py";
+const MATRIX_CREDITENTIALS: &str = "-c/home/vlp/tools_git//matrix-commander/credentials.json";
+const MATRIX_DB_FOLDER: &str = "-s/home/vlp/tools_git/matrix-commander/store/";
 const MATRIX_DRIVE: &str = "/dev/vdb";
 ////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////  FONCTION principale
 
 fn main() {
 
-    // let expression = "0   *   *   *   *   *   *"; 
+    // let expression = "0   *   *   *   *   *   *";
     // let schedule = Schedule::from_str(expression).unwrap();
 
     println!("///// botbot v2.1 by lovely fdn team");
