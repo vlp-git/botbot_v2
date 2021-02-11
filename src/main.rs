@@ -11,15 +11,14 @@ mod botbot_actions;
 use crate::botbot_actions::*;
 mod my_system;
 
-
 /// EXTERNAL CRATES
 // extern crate cron;
 // use cron::Schedule;
 // use chrono::DateTime;
 // use chrono::prelude::*;
 // use std::str::FromStr;
-use std::thread;
-use std::time::Duration;
+// use std::thread;
+// use std::time::Duration;
 use std::io::{BufRead, BufReader};
 use procfs::process::Process;
 use regex::Regex;
@@ -121,12 +120,12 @@ fn main() {
     line_from_buffer.clear();
 
     //////////////// test
-    thread::spawn(|| {
-        for i in 1..10 {
-            println!("hi number {} from the spawned thread!", i);
-            thread::sleep(Duration::from_millis(1000));
-        }
-    });
+    // thread::spawn(|| {
+    //     for i in 1..10 {
+    //         println!("hi number {} from the spawned thread!", i);
+    //         thread::sleep(Duration::from_millis(1000));
+    //     }
+    // });
     //////////////// test
 
     // _boucle global qui est bloquante à cause de read.line qui attend un '\n' pour avancer
@@ -137,7 +136,7 @@ fn main() {
             return;
         }
 
-        ////////////////  OUTPUT in progress
+        //////////////// test
         // _affiche un message chaques minutes
         // for datetime in schedule.upcoming(Local).take(1) {
         //     let raw_date_now: DateTime<Local> = Local::now();
@@ -147,8 +146,8 @@ fn main() {
         //         println!("!ALIVE: {}", date_now);
         //     }
         // }
+        //////////////// test
 
-        ////////////////  INTPUT
         // _lecture ligne à ligne du buffer
         let _buffer_control =
             match matrix_commander_ready_buffer.read_line(&mut line_from_buffer) {

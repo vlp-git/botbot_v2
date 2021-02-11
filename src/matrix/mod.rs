@@ -12,6 +12,8 @@ pub fn matrix_commander_daemon_launch() -> Result<Child, Error> {
         .arg(crate::MATRIX_CREDITENTIALS)
         .arg(crate::MATRIX_DB_FOLDER)
         .arg("-lforever")
+        .arg("--log-level")
+        .arg("ERROR")
         .stdout(Stdio::piped())
         .spawn();
     daemon
@@ -25,6 +27,8 @@ pub fn matrix_commander_message_send(room: String, blabla: String) -> Result<Chi
         .arg(crate::MATRIX_DB_FOLDER)
         .arg(room)
         .arg(blabla)
+        .arg("--log-level")
+        .arg("ERROR")
         .spawn() {
             Ok(talking_status_ctrl) => Ok(talking_status_ctrl),
             Err(e) => Err(format!("ERROR: sending message - {}", e)),
