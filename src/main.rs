@@ -156,8 +156,8 @@ fn main() {
                     line_from_buffer.clear();
                     buffer_control_ctrl
                 }
-                Err(e) => {
-                    println!("Unreadable line: {}", e);
+                Err(_e) => {
+                    //println!("Unreadable line: {}", e);
                     line_from_buffer.clear();
                     continue;
                 }

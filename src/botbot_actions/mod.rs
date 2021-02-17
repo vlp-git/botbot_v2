@@ -62,8 +62,8 @@ pub fn botbot_read(line_from_buffer: &String, connection_db: &Connection, trigge
                         println!("Botbot Message from {}: {}", incoming_message.sender_name, trigger_answer_result_ctrl);
                         trigger_answer_result_ctrl
                     }
-                    Err(e) =>  {
-                        println!("Error: {}", e);
+                    Err(_e) =>  {
+                        //println!("Error: {}", e);
                         return
                     }
                 };
@@ -71,8 +71,8 @@ pub fn botbot_read(line_from_buffer: &String, connection_db: &Connection, trigge
             let _talking_status =
                 match incoming_message.talking(trigger_answer){
                     Ok(talking_status_ctrl) => talking_status_ctrl.id(),
-                    Err(e) =>  {
-                      println!("Error: {}", e);
+                    Err(_e) =>  {
+                      //println!("Error: {}", e);
                       return
                   }
               };
