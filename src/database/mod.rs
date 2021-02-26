@@ -22,7 +22,7 @@ pub fn init_db () -> (Result<Connection, String>, Vec<String>, Vec<String>, Vec<
     {
         // _crée la table talking si elle n'existe pas
         let mut create_table_talking_statement =
-            match connection_db.prepare("CREATE TABLE if not exists talking (chat_id INTEGER PRIMARY KEY, trigger TEXT not null, answer TEXT not null);") {
+            match connection_db.prepare("CREATE TABLE if not exists talking (chat_id INTEGER PRIMARY KEY, trigger TEXT not null, answer TEXT not null, weight INTEGER);") {
                 Ok(create_table_talking_statement_ctrl) => create_table_talking_statement_ctrl,
                 Err(_e) => return (Err("Talking table fail to initialized".to_string()), trigger_word_list, adminsys_list, admicore_list),
               };
